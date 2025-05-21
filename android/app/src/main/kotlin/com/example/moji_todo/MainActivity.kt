@@ -23,7 +23,9 @@ import android.content.Context
 import android.content.IntentFilter
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.media.AudioAttributes // Thêm import này
+import android.media.AudioAttributes
+import android.media.RingtoneManager
+import android.os.Bundle
 
 class MainActivity : FlutterActivity() {
     private val PERMISSION_CHANNEL = "com.example.moji_todo/permissions"
@@ -59,36 +61,47 @@ class MainActivity : FlutterActivity() {
         const val SESSION_END_NOTIFICATION_ID = 101
     }
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val mgr = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+            // --- channel timer (unchanged) ---
             val timerChannel = NotificationChannel(
                 "timer_channel_id",
                 "Timer Notifications",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for Pomodoro timer running in background"
-                setSound(null, null)
+                description = "Pomodoro timer running"
+                setSound(null, null)    // im lặng
                 enableVibration(false)
-                setShowBadge(false)
             }
-            notificationManager.createNotificationChannel(timerChannel)
-            Log.d("MainActivity", "Created timer_channel_id: silent")
+            mgr.createNotificationChannel(timerChannel)
 
-            val pomodoroChannel = NotificationChannel(
+            // --- channel có âm thanh (đã xóa setSound) ---
+            val soundChannel = NotificationChannel(
                 "pomodoro_channel",
-                "Pomodoro Session End Notifications",
+                "Pomodoro Session End",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for when a Pomodoro session ends"
-                setSound(null, null) // KHÔNG ÂM THANH MẶC ĐỊNH CHO KÊNH
-                setShowBadge(true)
+                description = "Session end with sound"
+                // Xóa setSound để âm thanh được quyết định bởi Flutter
+                enableVibration(true)
             }
-            notificationManager.createNotificationChannel(pomodoroChannel)
-            Log.d("MainActivity", "Created pomodoro_channel: with sound/vibration support")
+            mgr.createNotificationChannel(soundChannel)
+
+            // --- channel im lặng ---
+            val silentChannel = NotificationChannel(
+                "pomodoro_channel_silent",
+                "Pomodoro Session End (Silent)",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Session end without sound"
+                setSound(null, null)    // IM LẶNG
+                enableVibration(false)
+            }
+            mgr.createNotificationChannel(silentChannel)
         }
     }
 
@@ -204,19 +217,6 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "getTimerState" -> {
-                    // LOẠI BỎ HOÀN TOÀN CUỘC GỌI startService/startForegroundService Ở ĐÂY.
-                    // TRẠNG THÁI SẼ ĐƯỢC RESTORE QUA HomeCubit HOẶC EMIT BỞI TimerService.
-                    /*
-                    val intent = Intent(this, TimerService::class.java).apply {
-                        action = TimerService.ACTION_GET_STATE
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startService(intent) // Dùng startService để gửi lệnh GET_STATE
-                    } else {
-                        startService(intent)
-                    }
-                    */
-
                     val prefs = getSharedPreferences("FlutterSharedPref", Context.MODE_PRIVATE)
                     val state = mapOf(
                         "timerSeconds" to prefs.getInt("timerSeconds", 25 * 60),
@@ -311,34 +311,29 @@ class MainActivity : FlutterActivity() {
                         result.error("ERROR", e.message, null)
                     }
                 }
-                "handleNotificationIntent" -> { // Phương thức này được gọi khi chạm vào notification chính (không phải action button)
+                "handleNotificationIntent" -> {
                     val arguments = call.arguments as? Map<*, *> ?: mapOf<String, Any>()
                     val flutterNotificationPayload = arguments["Flutter_notification_payload"] as? String
 
                     Log.d("MainActivity", "handleNotificationIntent (from Flutter): payload=$flutterNotificationPayload")
 
-                    // Hủy notification kết thúc phiên ngay lập tức khi người dùng chạm vào
                     NotificationManagerCompat.from(this).cancel(SESSION_END_NOTIFICATION_ID)
 
-                    // Kiểm tra các payload cụ thể để quyết định hành động tiếp theo
                     when (flutterNotificationPayload) {
                         "START_BREAK" -> {
-                            methodChannel?.invokeMethod("startBreak", null) // Gọi phương thức trên Flutter
+                            methodChannel?.invokeMethod("startBreak", null)
                             Log.d("MainActivity", "Invoked startBreak on Flutter from notification tap.")
                         }
                         "START_WORK" -> {
-                            methodChannel?.invokeMethod("startWork", null) // Gọi phương thức trên Flutter
+                            methodChannel?.invokeMethod("startWork", null)
                             Log.d("MainActivity", "Invoked startWork on Flutter via handleNotificationIntent.")
                         }
                         "COMPLETED_ALL_SESSIONS" -> {
-                            methodChannel?.invokeMethod("completedAllSessions", null) // Gọi phương thức trên Flutter
+                            methodChannel?.invokeMethod("completedAllSessions", null)
                             Log.d("MainActivity", "Invoked completedAllSessions on Flutter via handleNotificationIntent.")
                         }
                         else -> {
-                            // LOẠI BỎ logic gọi startForegroundService/startService ở đây.
-                            // HomeCubit sẽ tự động khôi phục trạng thái khi app resume/khởi tạo.
                             Log.d("MainActivity", "Generic notification tap, HomeCubit will restore state automatically.")
-                            // KHÔNG GỌI Service ở đây nữa
                         }
                     }
                     result.success(null)
@@ -354,10 +349,6 @@ class MainActivity : FlutterActivity() {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 timerEvents = events
                 Log.d("MainActivity", "EventChannel listener started. Waiting for TimerService to emit state.")
-                // ĐÃ XÓA logic gọi startForegroundService/startService với ACTION_GET_STATE ở đây.
-                // Điều này gây ra lỗi ForegroundServiceDidNotStartInTimeException nếu service không chạy foreground.
-                // HomeCubit sẽ yêu cầu trạng thái thông qua _restoreTimerState() khi khởi tạo hoặc app resume.
-                // TimerService sẽ tự động emit trạng thái hiện tại của nó khi EventChannel được kết nối nếu nó đang chạy.
             }
 
             override fun onCancel(arguments: Any?) {
@@ -366,8 +357,6 @@ class MainActivity : FlutterActivity() {
             }
         })
 
-        // Call handleNotificationIntent with the initial intent that launched the activity
-        // This is crucial for handling intents when the app is launched from a notification
         handleNotificationIntent(intent)
     }
 
@@ -469,10 +458,7 @@ class MainActivity : FlutterActivity() {
                         Log.d("MainActivity", "Invoked completedAllSessions on Flutter via handleNotificationIntent.")
                     }
                     else -> {
-                        // Loại bỏ logic gọi startForegroundService/startService ở đây.
-                        // HomeCubit sẽ tự động khôi phục trạng thái khi app resume/khởi tạo.
                         Log.d("MainActivity", "Generic notification tap, HomeCubit will restore state automatically.")
-                        // KHÔNG GỌI Service ở đây nữa
                     }
                 }
             }

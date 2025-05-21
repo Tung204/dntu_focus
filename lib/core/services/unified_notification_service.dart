@@ -82,9 +82,9 @@ class UnifiedNotificationService {
       ongoing: isRunning && !isPaused,
       showWhen: false,
       sound: null,
-      playSound: false,
+      playSound: true,
       onlyAlertOnce: true,
-      enableVibration: false,
+      enableVibration: true,
       actions: [
         if (isRunning && !isPaused)
           AndroidNotificationAction('pause_action', 'Pause', showsUserInterface: false),
@@ -119,65 +119,41 @@ class UnifiedNotificationService {
     String? notificationSound,
     bool? soundEnabled,
   }) async {
-    // NEW LOG: Log received parameters
-    print('[UnifiedNotificationService] showEndSessionNotification called with:');
-    print('[UnifiedNotificationService]   notificationSound: $notificationSound');
-    print('[UnifiedNotificationService]   soundEnabled: $soundEnabled');
+    final channelId = (soundEnabled ?? true)
+        ? 'pomodoro_channel'
+        : 'pomodoro_channel_silent';
 
-    final RawResourceAndroidNotificationSound? customSound = (soundEnabled ?? false) && (notificationSound != null && notificationSound != 'none')
-        ? RawResourceAndroidNotificationSound(notificationSound)
-        : null;
-
-    // NEW LOG: Log customSound object
-    if (customSound != null) {
-      print('[UnifiedNotificationService]   customSound object created for: ${customSound.sound}');
-    } else {
-      print('[UnifiedNotificationService]   customSound object is null.');
+    AndroidNotificationSound? sound;
+    if (soundEnabled == true && notificationSound != null && notificationSound != 'none') {
+      sound = RawResourceAndroidNotificationSound(notificationSound);
     }
 
-    final List<AndroidNotificationAction> actions = [];
-
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'pomodoro_channel',
-      'Pomodoro Session End Notifications',
-      channelDescription: 'Notifications for when a Pomodoro session ends',
-      importance: Importance.max, // MODIFIED: Ensure max importance
-      priority: Priority.high, // MODIFIED: Ensure high priority
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      'Pomodoro Session End',
+      channelDescription: 'Notification when Pomodoro session ends',
+      importance: Importance.max,
+      priority: Priority.high,
       autoCancel: true,
-      sound: customSound,
-      playSound: (soundEnabled ?? false),
-      enableVibration: (soundEnabled ?? false), // Rung cũng dựa vào soundEnabled
-      actions: actions,
+      sound: sound,
+      playSound: soundEnabled ?? true,
+      enableVibration: soundEnabled ?? true,
+      visibility: NotificationVisibility.public,
+      fullScreenIntent: true,
     );
 
-    // NEW LOG: Log AndroidNotificationDetails properties
-    print('[UnifiedNotificationService]   AndroidNotificationDetails created with:');
-    print('[UnifiedNotificationService]     channelId: ${androidDetails.channelId}');
-    print('[UnifiedNotificationService]     importance: ${androidDetails.importance.name}');
-    print('[UnifiedNotificationService]     priority: ${androidDetails.priority.name}');
-    print('[UnifiedNotificationService]     sound: ${androidDetails.sound?.sound}');
-    print('[UnifiedNotificationService]     playSound: ${androidDetails.playSound}');
-    print('[UnifiedNotificationService]     enableVibration: ${androidDetails.enableVibration}');
+    final details = NotificationDetails(android: androidDetails);
 
-
-    final NotificationDetails details = NotificationDetails(android: androidDetails);
-    try {
-      await _notificationsPlugin.show(
-        SESSION_END_NOTIFICATION_ID,
-        title,
-        body,
-        details,
-        payload: payload,
-      );
-      // MODIFIED: Existing log - this will now appear after all new detailed logs
-      print('End session notification shown (via plugin): title=$title, body=$body, payload=$payload, actions=${actions.map((a) => a.id).join(', ')}');
-    } catch (e) {
-      print('Error showing end session notification: $e');
-      if (kDebugMode) {
-        print('Error details: $e');
-      }
-    }
+    await _notificationsPlugin.show(
+      SESSION_END_NOTIFICATION_ID,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
   }
+
+
 
   Future<void> cancelNotification({int? id}) async {
     try {

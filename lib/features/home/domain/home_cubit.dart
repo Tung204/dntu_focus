@@ -36,9 +36,11 @@ class TimerActions {
 }
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(const HomeState()) {
-    _initialize();
-    _initAudioPlayerListeners(); // NEW: Gọi hàm khởi tạo listener cho AudioPlayer
+  HomeCubit({bool skipInit = false}) : super(const HomeState()) {
+    if (!skipInit) {
+      _initialize();
+      _initAudioPlayerListeners(); // NEW: Gọi hàm khởi tạo listener cho AudioPlayer
+    }
   }
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
