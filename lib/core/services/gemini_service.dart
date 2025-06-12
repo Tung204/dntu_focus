@@ -90,7 +90,7 @@ class GeminiService {
 
     String? rawText;
     try {
-      final response = await (generateContentOverride != null
+}
           ? generateContentOverride!([Content.text(prompt)])
           : _model.generateContent([Content.text(prompt)]));
       rawText = response.text?.trim() ?? '[]';
