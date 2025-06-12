@@ -26,18 +26,19 @@ class GeminiService {
     }
   }
 
-  // Phân tích câu lệnh người dùng để tạo task hoặc lịch trình
+  // Phân tích câu lệnh người dùng để tạo task, lịch trình hoặc bắt đầu Pomodoro
   Future<Map<String, dynamic>> parseUserCommand(String command) async {
     final prompt = '''
     Phân tích câu lệnh sau và trả về thông tin dưới dạng JSON:
     - Nếu là yêu cầu tạo task: trả về title, duration (phút), break_duration (phút), priority (High/Medium/Low), due_date (nếu có, định dạng ISO 8601).
     - Nếu là yêu cầu lên lịch: trả về title, due_date (định dạng ISO 8601), nhắc nhở trước bao lâu (phút).
+    - Nếu là yêu cầu bắt đầu Pomodoro hoặc hẹn giờ: trả về type "pomodoro", work_duration (phút), break_duration (phút, có thể 0) và sessions (số phiên, mặc định 1).
     - Nhận diện a.m/p.m tự động nếu có thời gian (mặc định a.m nếu không rõ).
     - Gợi ý priority dựa trên ngữ cảnh (ví dụ: "họp nhóm" -> High).
     Câu lệnh: "$command"
     Ví dụ: "làm bài tập toán 25 phút 5 phút nghỉ" -> {"type": "task", "title": "Làm bài tập toán", "duration": 25, "break_duration": 5, "priority": "Medium"}
     Ví dụ: "ngày mai đi chợ 6 sáng" -> {"type": "schedule", "title": "Đi chợ", "due_date": "2025-05-04T06:00:00Z", "reminder_before": 15}
-    Ví dụ: "họp nhóm lúc 3h" -> {"type": "schedule", "title": "Họp nhóm", "due_date": "2025-05-03T15:00:00Z", "reminder_before": 15, "priority": "High"}
+    Ví dụ: "bắt đầu pomodoro 15 phút" -> {"type": "pomodoro", "work_duration": 15, "break_duration": 5, "sessions": 1}
     Trả về chỉ JSON, không thêm ký tự Markdown như ```json hoặc các ký tự thừa.
     ''';
 

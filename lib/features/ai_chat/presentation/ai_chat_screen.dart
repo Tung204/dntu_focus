@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../../core/services/gemini_service.dart';
 import '../../../core/services/unified_notification_service.dart';
+import '../../home/domain/home_cubit.dart';
 import '../../tasks/domain/task_cubit.dart';
 import '../../tasks/data/models/task_model.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -102,6 +103,31 @@ class _AIChatScreenState extends State<AIChatScreen> {
           scheduledTime: reminderTime,
         );
         response = 'Đã lên lịch: ${task.title} vào ${task.dueDate}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      } else if (commandResult['type'] == 'pomodoro') {
+        final homeCubit = context.read<HomeCubit>();
+        final workDuration = commandResult['work_duration'] as int? ?? 25;
+        final breakDuration = commandResult['break_duration'] as int? ?? 5;
+        final sessions = commandResult['sessions'] as int? ?? 1;
+
+        await homeCubit.updateTimerMode(
+          timerMode: 'Tùy chỉnh',
+          workDuration: workDuration,
+          breakDuration: breakDuration,
+          soundEnabled: homeCubit.state.soundEnabled,
+          autoSwitch: homeCubit.state.autoSwitch,
+          notificationSound: homeCubit.state.notificationSound,
+          totalSessions: sessions,
+        );
+        homeCubit.selectTask(null, sessions);
+        homeCubit.startTimer();
+
+        response = 'Đã bắt đầu Pomodoro $workDuration phút';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response),
