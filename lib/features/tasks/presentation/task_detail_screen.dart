@@ -282,7 +282,14 @@ class TaskDetailScreen extends StatelessWidget {
                 leading: Checkbox(
                   value: subtask['completed'] ?? false,
                   onChanged: (value) {
-                    // TODO: Cập nhật subtask
+                    if (value == null) return;
+                    // Update the completion state locally
+                    subtask['completed'] = value;
+
+                    // Persist the change
+                    context.read<TaskCubit>().updateTask(
+                      task!.copyWith(subtasks: List<Map<String, dynamic>>.from(task!.subtasks!)),
+                    );
                   },
                   shape: const CircleBorder(),
                   activeColor: Theme.of(context).extension<SuccessColor>()?.success,
@@ -304,7 +311,50 @@ class TaskDetailScreen extends StatelessWidget {
                 icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
                 label: Text('Thêm subtask', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                 onPressed: () {
-                  // TODO: Logic thêm subtask
+                  final TextEditingController controller = TextEditingController();
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: Text('Thêm Subtask', style: Theme.of(context).textTheme.titleLarge),
+                        content: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                            hintText: 'Tên subtask',
+                            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: Text('Hủy', style: Theme.of(context).textTheme.bodyMedium),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              final title = controller.text.trim();
+                              if (title.isEmpty) {
+                                Navigator.pop(dialogContext);
+                                return;
+                              }
+
+                              final newSubtask = {'title': title, 'completed': false};
+                              if (task!.subtasks == null) {
+                                task!.subtasks = [newSubtask];
+                              } else {
+                                task!.subtasks = List<Map<String, dynamic>>.from(task!.subtasks!)..add(newSubtask);
+                              }
+
+                              context.read<TaskCubit>().updateTask(
+                                task!.copyWith(subtasks: List<Map<String, dynamic>>.from(task!.subtasks!)),
+                              );
+                              Navigator.pop(dialogContext);
+                            },
+                            child: Text('Thêm', style: Theme.of(context).textTheme.bodyMedium),
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 0), alignment: Alignment.centerLeft),
               ),
