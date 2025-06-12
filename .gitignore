@@ -50,5 +50,3 @@ GoogleService-Info.plist
 firebase.json
 debug.keystore
 
-
-.env
