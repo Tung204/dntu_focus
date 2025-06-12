@@ -1,12 +1,13 @@
 import 'package:hive/hive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart'; // THÊM IMPORT NÀY
 
 part 'task_model.g.dart';
 
 @HiveType(typeId: 0)
 class Task {
   @HiveField(0)
-  int? id;
+  String? id; // ĐỔI THÀNH String?
 
   @HiveField(1)
   String? title;
@@ -21,10 +22,10 @@ class Task {
   String? priority;
 
   @HiveField(5)
-  String? project;
+  String? projectId;
 
   @HiveField(6)
-  List<String>? tags;
+  List<String>? tagIds;
 
   @HiveField(7)
   int? estimatedPomodoros;
@@ -54,16 +55,19 @@ class Task {
   DateTime? createdAt;
 
   @HiveField(16)
-  String? originalCategory; // Thêm trường originalCategory để lưu category ban đầu
+  String? originalCategory;
+
+  @HiveField(17)
+  DateTime? completionDate;
 
   Task({
-    this.id,
+    String? id, // ĐỔI THÀNH String?
     this.title,
     this.note,
     this.dueDate,
     this.priority,
-    this.project,
-    this.tags,
+    this.projectId,
+    this.tagIds,
     this.estimatedPomodoros,
     this.completedPomodoros,
     this.category,
@@ -74,17 +78,18 @@ class Task {
     this.userId,
     this.createdAt,
     this.originalCategory,
-  });
+    this.completionDate,
+  }) : id = id ?? const Uuid().v4(); // TỰ ĐỘNG TẠO UUID NẾU ID LÀ NULL
 
-  factory Task.fromJson(Map<String, dynamic> json) {
+  factory Task.fromJson(Map<String, dynamic> json, {String? docId}) { // Thêm docId tùy chọn
     return Task(
-      id: json['id'] as int?,
+      id: docId ?? json['id'] as String?, // Ưu tiên docId từ Firestore nếu có, sau đó mới đến trường 'id' trong data
       title: json['title'] as String?,
       note: json['note'] as String?,
       dueDate: json['dueDate'] != null ? (json['dueDate'] as Timestamp).toDate() : null,
       priority: json['priority'] as String?,
-      project: json['project'] as String?,
-      tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
+      projectId: json['projectId'] as String?,
+      tagIds: (json['tagIds'] as List<dynamic>?)?.cast<String>(),
       estimatedPomodoros: json['estimatedPomodoros'] as int?,
       completedPomodoros: json['completedPomodoros'] as int?,
       category: json['category'] as String?,
@@ -95,18 +100,29 @@ class Task {
       userId: json['userId'] as String?,
       createdAt: json['createdAt'] != null ? (json['createdAt'] as Timestamp).toDate() : null,
       originalCategory: json['originalCategory'] as String?,
+      completionDate: json['completionDate'] != null ? (json['completionDate'] as Timestamp).toDate() : null,
     );
+  }
+
+  static Task fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    if (data == null) {
+      throw Exception('Document does not exist');
+    }
+    return Task.fromJson(data, docId: doc.id);
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      // Không gửi 'id' ở đây nếu bạn dùng ID của document làm ID task trên Firestore
+      // Nếu bạn muốn lưu 'id' (UUID) vào trong data của document thì thêm dòng sau:
+      'id': id, // GIỮ LẠI ĐỂ NHẤT QUÁN VỚI PROJECT VÀ TAG
       'title': title,
       'note': note,
       'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
       'priority': priority,
-      'project': project,
-      'tags': tags,
+      'projectId': projectId,
+      'tagIds': tagIds,
       'estimatedPomodoros': estimatedPomodoros,
       'completedPomodoros': completedPomodoros,
       'category': category,
@@ -117,46 +133,90 @@ class Task {
       'userId': userId,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'originalCategory': originalCategory,
+      'completionDate': completionDate != null ? Timestamp.fromDate(completionDate!) : null,
     };
   }
 
   Task copyWith({
-    int? id,
+    String? id,
     String? title,
     String? note,
     DateTime? dueDate,
     String? priority,
-    String? project,
-    List<String>? tags,
-    int? estimatedPomodoros,
-    int? completedPomodoros,
-    String? category,
-    bool? isPomodoroActive,
-    int? remainingPomodoroSeconds,
-    bool? isCompleted,
-    List<Map<String, dynamic>>? subtasks,
-    String? userId,
-    DateTime? createdAt,
-    String? originalCategory,
+    // Sử dụng Object? cho các trường bạn muốn có khả năng set về null,
+    // và gán giá trị mặc định là sentinel.
+    Object? projectId = _copyWithSentinel,
+    Object? tagIds = _copyWithSentinel, // Làm tương tự cho các trường List?, int?, bool? khác nếu cần
+    Object? estimatedPomodoros = _copyWithSentinel,
+    Object? completedPomodoros = _copyWithSentinel,
+    Object? category = _copyWithSentinel,
+    Object? isPomodoroActive = _copyWithSentinel,
+    Object? remainingPomodoroSeconds = _copyWithSentinel,
+    Object? isCompleted = _copyWithSentinel,
+    Object? subtasks = _copyWithSentinel,
+    // userId và createdAt thường không nên set về null tùy tiện nếu đã có giá trị,
+    // nhưng nếu cần thì làm tương tự.
+    String? userId, // Giữ nguyên nếu bạn không muốn set userId về null qua copyWith
+    DateTime? createdAt, // Giữ nguyên
+    Object? originalCategory = _copyWithSentinel,
+    Object? completionDate = _copyWithSentinel,
   }) {
     return Task(
       id: id ?? this.id,
       title: title ?? this.title,
-      note: note ?? this.note,
-      dueDate: dueDate ?? this.dueDate,
+      note: note ?? this.note, // Giữ nguyên cho các trường String? nếu logic ?? phù hợp
+      dueDate: dueDate ?? this.dueDate, // Giữ nguyên cho DateTime? nếu logic ?? phù hợp
       priority: priority ?? this.priority,
-      project: project ?? this.project,
-      tags: tags ?? this.tags,
-      estimatedPomodoros: estimatedPomodoros ?? this.estimatedPomodoros,
-      completedPomodoros: completedPomodoros ?? this.completedPomodoros,
-      category: category ?? this.category,
-      isPomodoroActive: isPomodoroActive ?? this.isPomodoroActive,
-      remainingPomodoroSeconds: remainingPomodoroSeconds ?? this.remainingPomodoroSeconds,
-      isCompleted: isCompleted ?? this.isCompleted,
-      subtasks: subtasks ?? this.subtasks,
+
+      // Logic mới cho projectId
+      projectId: projectId == _copyWithSentinel
+          ? this.projectId // Nếu là sentinel, nghĩa là không có giá trị mới được truyền -> giữ giá trị cũ
+          : projectId as String?, // Nếu không phải sentinel -> dùng giá trị mới (có thể là null hoặc một String)
+
+      // Áp dụng tương tự cho các trường khác mà bạn muốn có thể set về null
+      tagIds: tagIds == _copyWithSentinel
+          ? this.tagIds
+          : tagIds as List<String>?,
+
+      estimatedPomodoros: estimatedPomodoros == _copyWithSentinel
+          ? this.estimatedPomodoros
+          : estimatedPomodoros as int?,
+
+      completedPomodoros: completedPomodoros == _copyWithSentinel
+          ? this.completedPomodoros
+          : completedPomodoros as int?,
+
+      category: category == _copyWithSentinel
+          ? this.category
+          : category as String?,
+
+      isPomodoroActive: isPomodoroActive == _copyWithSentinel
+          ? this.isPomodoroActive
+          : isPomodoroActive as bool?,
+
+      remainingPomodoroSeconds: remainingPomodoroSeconds == _copyWithSentinel
+          ? this.remainingPomodoroSeconds
+          : remainingPomodoroSeconds as int?,
+
+      isCompleted: isCompleted == _copyWithSentinel
+          ? this.isCompleted
+          : isCompleted as bool?,
+
+      subtasks: subtasks == _copyWithSentinel
+          ? this.subtasks
+          : subtasks as List<Map<String, dynamic>>?,
+
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
-      originalCategory: originalCategory ?? this.originalCategory,
+
+      originalCategory: originalCategory == _copyWithSentinel
+          ? this.originalCategory
+          : originalCategory as String?,
+
+      completionDate: completionDate == _copyWithSentinel
+          ? this.completionDate
+          : completionDate as DateTime?,
     );
   }
 }
+const Object _copyWithSentinel = Object();

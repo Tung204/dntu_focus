@@ -44,7 +44,8 @@ class AppTheme {
       titleTextStyle: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
       iconTheme: IconThemeData(color: Colors.grey),
     ),
-    cardTheme: CardTheme(
+    // SỬA Ở ĐÂY: CardTheme -> CardThemeData
+    cardTheme: CardThemeData(
       color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -61,6 +62,7 @@ class AppTheme {
       primarySwatch: Colors.blue,
       brightness: Brightness.light,
     ).copyWith(
+      primary: Colors.blue,
       secondary: const Color(0xFFFF5733),
       primaryContainer: const Color(0xFFE3F2FD),
       errorContainer: const Color(0xFFFFEBEE),
@@ -89,7 +91,8 @@ class AppTheme {
       titleTextStyle: TextStyle(color: Color(0xFFE0E0E0), fontSize: 20, fontWeight: FontWeight.bold),
       iconTheme: IconThemeData(color: Color(0xFFB0BEC5)),
     ),
-    cardTheme: CardTheme(
+    // SỬA Ở ĐÂY: CardTheme -> CardThemeData
+    cardTheme: CardThemeData(
       color: const Color(0xFF3A3A3A),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

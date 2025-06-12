@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart'; // THÊM IMPORT BLOC
+import '../../../../core/themes/theme.dart';
 import '../../data/models/project_model.dart';
 import '../../data/models/project_tag_repository.dart';
+import '../../domain/task_cubit.dart'; // THÊM IMPORT TASK_CUBIT
 
 class ArchivedProjectsScreen extends StatefulWidget {
   final ProjectTagRepository repository;
@@ -31,29 +33,32 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color successColorWithTheme = theme.extension<SuccessColor>()?.success ?? Colors.green;
+
     return ValueListenableBuilder(
       valueListenable: widget.repository.projectBox.listenable(),
       builder: (context, Box<Project> box, _) {
         final archivedProjects = widget.repository.getArchivedProjects();
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.grey),
+              icon: Icon(Icons.arrow_back, color: theme.appBarTheme.iconTheme?.color),
               onPressed: () {
                 Navigator.pop(context);
               },
             ),
-            title: const Text(
+            title: Text(
               'Archived Projects',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+              style: theme.appBarTheme.titleTextStyle?.copyWith(fontSize: 24) ??
+                  TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color),
             ),
             centerTitle: true,
           ),
@@ -64,11 +69,12 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.delete_outline, size: 64, color: Colors.grey),
+                  Icon(Icons.inventory_2_outlined, // Thay icon cho phù hợp
+                      size: 64, color: theme.iconTheme.color?.withOpacity(0.5)),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Không có project nào trong thùng rác.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  Text(
+                    'Không có dự án nào được lưu trữ.',
+                    style: TextStyle(fontSize: 16, color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)),
                   ),
                 ],
               ),
@@ -77,6 +83,11 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
               child: ListView.builder(
                 itemCount: archivedProjects.length,
                 itemBuilder: (context, index) {
+                  final project = archivedProjects[index];
+                  final IconData projectIconData = project.icon ?? Icons.folder_zip_outlined;
+                  // SỬA: Lấy ID của project, không phải key của Hive object
+                  final String projectId = project.id; // Sử dụng project.id
+
                   return AnimationConfiguration.staggeredList(
                     position: index,
                     duration: const Duration(milliseconds: 375),
@@ -84,48 +95,52 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                             child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: archivedProjects[index].color,
+                                Icon(
+                                  projectIconData,
+                                  color: project.color,
+                                  size: 36,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    archivedProjects[index].name,
-                                    style: const TextStyle(
+                                    project.name,
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.black,
+                                      color: theme.textTheme.bodyMedium?.color,
                                     ),
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.restore, color: Colors.green, size: 24),
+                                  icon: Icon(Icons.restore_from_trash_outlined, // Icon khôi phục
+                                      color: successColorWithTheme, size: 24),
+                                  tooltip: 'Khôi phục dự án',
                                   onPressed: () {
                                     _debounceAction(() async {
                                       try {
-                                        await widget.repository.restoreProject(index);
-                                        // SỬA: Không cần setState vì ValueListenableBuilder sẽ tự làm mới UI
+                                        // Sử dụng projectId (String)
+                                        await widget.repository.restoreProjectByKey(projectId);
+                                        if (!mounted) return;
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Project đã được khôi phục!'),
-                                            backgroundColor: Colors.green,
+                                          SnackBar(
+                                            content: Text('Dự án "${project.name}" đã được khôi phục!'),
+                                            backgroundColor: successColorWithTheme,
                                           ),
                                         );
+                                        // Gọi loadInitialData của TaskCubit để cập nhật danh sách project trong TaskState
+                                        // và cũng để các màn hình khác (như TaskManageScreen) cập nhật
+                                        context.read<TaskCubit>().loadInitialData();
                                       } catch (e) {
+                                        if (!mounted) return;
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text('Lỗi khi khôi phục: $e'),
-                                            backgroundColor: Colors.red,
+                                            backgroundColor: theme.colorScheme.error,
                                           ),
                                         );
                                       }
@@ -133,7 +148,9 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_forever, color: Colors.red, size: 24),
+                                  icon: Icon(Icons.delete_forever_outlined, // Icon xóa vĩnh viễn
+                                      color: theme.colorScheme.error, size: 24),
+                                  tooltip: 'Xóa vĩnh viễn',
                                   onPressed: () {
                                     _debounceAction(() {
                                       showDialog(
@@ -141,16 +158,20 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
                                         builder: (dialogContext) {
                                           bool isLoading = false;
                                           return StatefulBuilder(
-                                            builder: (context, setState) {
+                                            builder: (stfContext, stfSetState) {
                                               return AlertDialog(
-                                                title: const Text('Xóa vĩnh viễn'),
+                                                backgroundColor: theme.cardTheme.color ?? theme.dialogBackgroundColor,
+                                                title: Text('Xóa vĩnh viễn', style: theme.textTheme.titleLarge),
                                                 content: Column(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    Text('Bạn có chắc muốn xóa vĩnh viễn project "${archivedProjects[index].name}" không?'),
+                                                    Text(
+                                                      'Bạn có chắc muốn xóa vĩnh viễn dự án "${project.name}" không? Hành động này không thể hoàn tác và sẽ gỡ bỏ dự án này khỏi tất cả các task liên quan.',
+                                                      style: theme.textTheme.bodyMedium,
+                                                    ),
                                                     if (isLoading) ...[
                                                       const SizedBox(height: 16),
-                                                      const CircularProgressIndicator(),
+                                                      CircularProgressIndicator(color: theme.colorScheme.primary),
                                                     ],
                                                   ],
                                                 ),
@@ -161,40 +182,51 @@ class _ArchivedProjectsScreenState extends State<ArchivedProjectsScreen> {
                                                         : () {
                                                       Navigator.pop(dialogContext);
                                                     },
-                                                    child: const Text('Hủy'),
+                                                    child: Text('Hủy', style: TextStyle(color: theme.colorScheme.primary)),
                                                   ),
                                                   TextButton(
                                                     onPressed: isLoading
                                                         ? null
                                                         : () async {
-                                                      setState(() {
+                                                      stfSetState(() {
                                                         isLoading = true;
                                                       });
                                                       try {
-                                                        await widget.repository.deleteProject(index, context);
-                                                        Navigator.pop(dialogContext);
-                                                        // SỬA: Không cần setState vì ValueListenableBuilder sẽ tự làm mới UI
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text('Project đã được xóa vĩnh viễn!'),
-                                                            backgroundColor: Colors.red,
-                                                          ),
-                                                        );
+                                                        // SỬA: Gọi hàm điều phối trong TaskCubit
+                                                        // Truyền projectId (String)
+                                                        await context.read<TaskCubit>().deleteProjectAndUpdateTasks(projectId);
+
+                                                        if (!mounted) return;
+                                                        Navigator.pop(dialogContext); // Đóng dialog xác nhận
+
+                                                        if (mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text('Dự án "${project.name}" đã được xóa vĩnh viễn!'),
+                                                              backgroundColor: theme.colorScheme.error,
+                                                            ),
+                                                          );
+                                                        }
+                                                        // TaskCubit đã gọi loadInitialData, ValueListenableBuilder sẽ tự cập nhật
                                                       } catch (e) {
-                                                        setState(() {
+                                                        stfSetState(() {
                                                           isLoading = false;
                                                         });
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text('Lỗi khi xóa: $e'),
-                                                            backgroundColor: Colors.red,
-                                                          ),
-                                                        );
+                                                        if (!mounted) return;
+                                                        Navigator.pop(dialogContext);
+                                                        if (mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text('Lỗi khi xóa dự án: $e'),
+                                                              backgroundColor: theme.colorScheme.error,
+                                                            ),
+                                                          );
+                                                        }
                                                       }
                                                     },
-                                                    child: const Text(
+                                                    child: Text(
                                                       'Xóa vĩnh viễn',
-                                                      style: TextStyle(color: Colors.red),
+                                                      style: TextStyle(color: theme.colorScheme.error),
                                                     ),
                                                   ),
                                                 ],
