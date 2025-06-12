@@ -182,6 +182,11 @@ Sắp xếp công việc với dự án và thẻ, đồng bộ qua Firestore.
    flutter run
    ```
 
+5. **Chạy kiểm thử**:
+   ```bash
+   flutter test
+   ```
+
 ## Kiến trúc
 
 ### Công nghệ
