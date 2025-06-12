@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'DNTU - Focus',
+          'DNTU-Focus',
           style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
