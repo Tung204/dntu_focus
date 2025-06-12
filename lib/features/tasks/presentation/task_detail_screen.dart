@@ -281,8 +281,19 @@ class TaskDetailScreen extends StatelessWidget {
               ...task!.subtasks!.map((subtask) => ListTile(
                 leading: Checkbox(
                   value: subtask['completed'] ?? false,
-                  onChanged: (value) {
-                    // TODO: Cập nhật subtask
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks!);
+                    final index = updatedSubtasks.indexOf(subtask);
+                    if (index != -1) {
+                      updatedSubtasks[index] = {
+                        ...updatedSubtasks[index],
+                        'completed': value,
+                      };
+                      await context.read<TaskCubit>().updateTask(
+                        task!.copyWith(subtasks: updatedSubtasks),
+                      );
+                    }
                   },
                   shape: const CircleBorder(),
                   activeColor: Theme.of(context).extension<SuccessColor>()?.success,
@@ -303,8 +314,37 @@ class TaskDetailScreen extends StatelessWidget {
               child: TextButton.icon(
                 icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
                 label: Text('Thêm subtask', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                onPressed: () {
-                  // TODO: Logic thêm subtask
+                onPressed: () async {
+                  final TextEditingController controller = TextEditingController();
+                  final newTitle = await showDialog<String>(
+                    context: context,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Thêm subtask'),
+                        content: TextField(
+                          controller: controller,
+                          decoration: const InputDecoration(hintText: 'Tên subtask'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Hủy'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+                            child: const Text('Thêm'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (newTitle != null && newTitle.isNotEmpty) {
+                    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks ?? []);
+                    updatedSubtasks.add({'title': newTitle, 'completed': false});
+                    await context.read<TaskCubit>().updateTask(
+                      task!.copyWith(subtasks: updatedSubtasks),
+                    );
+                  }
                 },
                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 0), alignment: Alignment.centerLeft),
               ),

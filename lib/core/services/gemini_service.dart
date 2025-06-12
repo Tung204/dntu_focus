@@ -5,10 +5,14 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 class GeminiService {
   late final GenerativeModel _model;
 
-  GeminiService() {
+  GeminiService({GenerativeModel? model}) {
+    _model = model ?? _createDefaultModel();
+  }
+
+  static GenerativeModel _createDefaultModel() {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null) throw Exception('Gemini API Key không tìm thấy');
-    _model = GenerativeModel(
+    return GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: apiKey,
       safetySettings: [
