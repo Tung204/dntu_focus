@@ -1,43 +1,52 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'tag_model.dart';
+part of 'project_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class TagAdapter extends TypeAdapter<Tag> {
+class ProjectAdapter extends TypeAdapter<Project> {
   @override
-  final int typeId = 2;
+  final int typeId = 1;
 
   @override
-  Tag read(BinaryReader reader) {
+  Project read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Tag(
+    return Project(
       id: fields[0] as String?,
       name: fields[1] as String,
-      textColor: Color(fields[3] as int),
-      isArchived: fields[4] as bool,
-      userId: fields[5] as String?,
+      color: Color(fields[2] as int),
+      isArchived: fields[3] as bool,
+      iconCodePoint: fields[4] as int?,
+      iconFontFamily: fields[5] as String?,
+      iconFontPackage: fields[6] as String?,
+      userId: fields[7] as String?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Tag obj) {
+  void write(BinaryWriter writer, Project obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.name)
+      ..writeByte(2)
+      ..write(obj.colorValue)
       ..writeByte(3)
-      ..write(obj.textColorValue)
-      ..writeByte(4)
       ..write(obj.isArchived)
+      ..writeByte(4)
+      ..write(obj.iconCodePoint)
       ..writeByte(5)
+      ..write(obj.iconFontFamily)
+      ..writeByte(6)
+      ..write(obj.iconFontPackage)
+      ..writeByte(7)
       ..write(obj.userId);
   }
 
@@ -47,7 +56,7 @@ class TagAdapter extends TypeAdapter<Tag> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TagAdapter &&
+      other is ProjectAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

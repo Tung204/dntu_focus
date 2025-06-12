@@ -103,6 +103,12 @@ class AppRoutes {
             body: Center(child: Text('Account & Security Screen')),
           ),
         );
+      case AppRoutes.appAppearance:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('App Appearance Screen')),
+          ),
+        );
       case AppRoutes.helpSupport:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

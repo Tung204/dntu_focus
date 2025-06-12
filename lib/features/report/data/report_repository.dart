@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:moji_todo/core/utils/my_date_range.dart';
 import 'package:moji_todo/features/report/data/models/pomodoro_session_model.dart';
+import 'package:moji_todo/features/report/data/report_time_range.dart';
 import 'package:moji_todo/features/tasks/data/models/task_model.dart';
 
 class ReportRepository {
@@ -17,7 +17,6 @@ class ReportRepository {
 
   String? get _userId => _auth.currentUser?.uid;
 
-  // Helper để lấy collection `pomodoro_sessions` của user hiện tại
   CollectionReference<PomodoroSessionRecordModel> _sessionsCollection() {
     final userId = _userId;
     if (userId == null) {
@@ -33,8 +32,7 @@ class ReportRepository {
     );
   }
 
-  // Helper để lấy collection `tasks` của user hiện tại
-  CollectionReference<TaskModel> _tasksCollection() {
+  CollectionReference<Task> _tasksCollection() {
     final userId = _userId;
     if (userId == null) {
       throw Exception('User is not logged in.');
@@ -43,15 +41,13 @@ class ReportRepository {
         .collection('users')
         .doc(userId)
         .collection('tasks')
-        .withConverter<TaskModel>(
-      fromFirestore: (snapshot, _) => TaskModel.fromFirestore(snapshot),
+        .withConverter<Task>(
+      fromFirestore: (snapshot, _) => Task.fromJson(snapshot.data()!, docId: snapshot.id),
       toFirestore: (model, _) => model.toJson(),
     );
   }
 
-  /// Lấy tất cả các session trong một khoảng thời gian
-  Future<List<PomodoroSessionRecordModel>> getPomodoroSessions(
-      DateTime start, DateTime end) async {
+  Future<List<PomodoroSessionRecordModel>> getPomodoroSessions(DateTime start, DateTime end) async {
     try {
       final snapshot = await _sessionsCollection()
           .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
@@ -60,73 +56,150 @@ class ReportRepository {
       return snapshot.docs.map((doc) => doc.data()).toList();
     } catch (e) {
       debugPrint('Error getting pomodoro sessions: $e');
-      rethrow;
+      // Trả về danh sách rỗng để tránh crash
+      return [];
     }
   }
 
-  /// Lấy tổng số task đã hoàn thành trong khoảng thời gian
-  Future<int> getCompletedTasksCountForRange(DateTimeRange range) async {
+  // ===== SỬA LỖI QUAN TRỌNG Ở ĐÂY =====
+  Future<int> getCompletedTasksCountForRange(ReportTimeRange range) async {
+    final dateRange = range.range;
     try {
       final snapshot = await _tasksCollection()
           .where('isCompleted', isEqualTo: true)
-          .where('completionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(range.start))
-          .where('completionDate', isLessThanOrEqualTo: Timestamp.fromDate(range.end))
+          .where('completionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(dateRange.start))
+          .where('completionDate', isLessThanOrEqualTo: Timestamp.fromDate(dateRange.end))
           .count()
           .get();
-      return snapshot.count;
+      return snapshot.count ?? 0;
     } catch (e) {
-      debugPrint('Error getting completed tasks count: $e');
-      rethrow;
+      // THAY ĐỔI: Thay vì ném lại lỗi, ta ghi log và trả về 0.
+      // Điều này ngăn ứng dụng bị crash nếu việc đếm task thất bại.
+      debugPrint('Error getting completed tasks count, returning 0. Error: $e');
+      return 0;
     }
   }
 
-  /// Lấy dữ liệu cho biểu đồ phân bổ thời gian theo Project
-  Future<Map<String?, int>> getProjectTimeDistributionForRange(
-      DateTimeRange range) async {
-    final sessions = await getPomodoroSessions(range.start, range.end);
+  Future<Map<String?, Duration>> getProjectTimeDistributionForRange(ReportTimeRange range) async {
+    final dateRange = range.range;
+    final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
     final workSessions = sessions.where((s) => s.isWorkSession);
 
-    final Map<String?, int> projectDurations = {};
+    final Map<String?, int> projectDurationsInSeconds = {};
     for (final session in workSessions) {
-      // projectId có thể null, ta sẽ nhóm chúng vào một mục 'General' hoặc 'None'
       final key = session.projectId;
-      projectDurations.update(key, (value) => value + session.duration,
+      projectDurationsInSeconds.update(key, (value) => value + session.duration,
           ifAbsent: () => session.duration);
     }
-    return projectDurations;
+    return projectDurationsInSeconds.map((key, value) => MapEntry(key, Duration(seconds: value)));
   }
 
-  /// Lấy dữ liệu thời gian tập trung cho từng task
-  Future<Map<String, int>> getTaskFocusTime(DateTimeRange range) async {
-    final sessions = await getPomodoroSessions(range.start, range.end);
+  Future<Map<String, Duration>> getTaskFocusTime(ReportTimeRange range) async {
+    final dateRange = range.range;
+    final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
     final workSessions = sessions.where((s) => s.isWorkSession && s.taskId != null);
 
-    final Map<String, int> taskDurations = {};
+    final Map<String, int> taskDurationsInSeconds = {};
     for (final session in workSessions) {
-      taskDurations.update(session.taskId!, (value) => value + session.duration,
+      taskDurationsInSeconds.update(session.taskId!, (value) => value + session.duration,
           ifAbsent: () => session.duration);
     }
-    return taskDurations;
+    return taskDurationsInSeconds.map((key, value) => MapEntry(key, Duration(seconds: value)));
   }
 
-
-  /// Lấy dữ liệu cho biểu đồ cột Focus Time Chart
-  Future<Map<DateTime, Map<String?, int>>> getFocusTimeChartData(
-      MyDateRange range) async {
-    final sessions = await getPomodoroSessions(range.start, range.end);
+  Future<Map<DateTime, Map<String?, Duration>>> getFocusTimeChartData(ReportTimeRange range) async {
+    final dateRange = range.range;
+    final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
     final workSessions = sessions.where((s) => s.isWorkSession);
 
-    final Map<DateTime, Map<String?, int>> dailyData = {};
+    final Map<DateTime, Map<String?, int>> dailyDataInSeconds = {};
 
     for (final session in workSessions) {
       final day = DateUtils.dateOnly(session.startTime);
-
-      final dailyMap = dailyData.putIfAbsent(day, () => {});
-
+      final dailyMap = dailyDataInSeconds.putIfAbsent(day, () => {});
       final projectId = session.projectId;
       dailyMap.update(projectId, (value) => value + session.duration, ifAbsent: () => session.duration);
     }
 
-    return dailyData;
+    return dailyDataInSeconds.map((date, data) => MapEntry(
+        date, data.map((key, value) => MapEntry(key, Duration(seconds: value)))));
+  }
+
+  Future<Duration> getTotalFocusTimeForRange(ReportTimeRange range) async {
+    try {
+      final dateRange = range.range;
+      final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
+      final totalSeconds = sessions
+          .where((s) => s.isWorkSession)
+          .fold<int>(0, (sum, s) => sum + s.duration);
+      return Duration(seconds: totalSeconds);
+    } catch(e) {
+      debugPrint('Error getting total focus time, returning Duration.zero. Error: $e');
+      return Duration.zero;
+    }
+  }
+
+  Future<Map<DateTime, List<PomodoroSessionRecordModel>>> getPomodoroRecordsHeatmapData({
+    required ReportTimeRange range,
+  }) async {
+    try {
+      final dateRange = range.range;
+      final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
+      final Map<DateTime, List<PomodoroSessionRecordModel>> data = {};
+      for (final session in sessions) {
+        final day = DateUtils.dateOnly(session.startTime);
+        data.putIfAbsent(day, () => []).add(session);
+      }
+      return data;
+    } catch(e) {
+      debugPrint('Error getting heatmap data, returning empty map. Error: $e');
+      return {};
+    }
+  }
+
+  Future<Set<DateTime>> getDaysMeetingFocusGoal(ReportTimeRange range, Duration dailyGoal) async {
+    try {
+      final dateRange = range.range;
+      final sessions = await getPomodoroSessions(dateRange.start, dateRange.end);
+      final Map<DateTime, int> dailyTotals = {};
+      for (final s in sessions.where((e) => e.isWorkSession)) {
+        final day = DateUtils.dateOnly(s.startTime);
+        dailyTotals.update(day, (v) => v + s.duration, ifAbsent: () => s.duration);
+      }
+      final Set<DateTime> metDays = {};
+      for (final entry in dailyTotals.entries) {
+        if (entry.value >= dailyGoal.inSeconds) metDays.add(entry.key);
+      }
+      return metDays;
+    } catch (e) {
+      debugPrint('Error getting goal days, returning empty set. Error: $e');
+      return {};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getFocusTimePerTaskForRange(ReportTimeRange range) async {
+    try {
+      final taskDurations = await getTaskFocusTime(range);
+      if (taskDurations.isEmpty) return [];
+
+      final List<Map<String, dynamic>> result = [];
+      for (final entry in taskDurations.entries) {
+        try {
+          final doc = await _tasksCollection().doc(entry.key).get();
+          if (doc.exists) {
+            final task = doc.data();
+            if (task != null) {
+              result.add({'task': task, 'focusTime': entry.value});
+            }
+          }
+        } catch (e) {
+          debugPrint("Could not find task with id: ${entry.key}. Error: $e");
+        }
+      }
+      return result;
+    } catch (e) {
+      debugPrint('Error getting focus time per task, returning empty list. Error: $e');
+      return [];
+    }
   }
 }

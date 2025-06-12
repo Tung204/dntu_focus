@@ -119,10 +119,12 @@ class UnifiedNotificationService {
     String? notificationSound,
     bool? soundEnabled,
   }) async {
+    // Chọn kênh dựa trên cài đặt soundEnabled
     final channelId = (soundEnabled ?? true)
         ? 'pomodoro_channel'
         : 'pomodoro_channel_silent';
 
+    // Nếu có soundEnabled=false thì sound là null, playSound=false
     AndroidNotificationSound? sound;
     if (soundEnabled == true && notificationSound != null && notificationSound != 'none') {
       sound = RawResourceAndroidNotificationSound(notificationSound);
@@ -135,8 +137,8 @@ class UnifiedNotificationService {
       importance: Importance.max,
       priority: Priority.high,
       autoCancel: true,
-      sound: sound,
-      playSound: soundEnabled ?? true,
+      sound: sound,                        // null nếu silent
+      playSound: soundEnabled ?? true,     // false nếu user tắt
       enableVibration: soundEnabled ?? true,
       visibility: NotificationVisibility.public,
       fullScreenIntent: true,
@@ -152,7 +154,6 @@ class UnifiedNotificationService {
       payload: payload,
     );
   }
-
 
 
   Future<void> cancelNotification({int? id}) async {
