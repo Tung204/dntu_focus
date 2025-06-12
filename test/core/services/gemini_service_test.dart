@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:moji_todo/core/services/gemini_service.dart';
 
 class MockGenerativeModel extends Mock implements GenerativeModel {}
-
 void main() {
   group('GeminiService', () {
     late MockGenerativeModel mockModel;
@@ -14,7 +14,6 @@ void main() {
       mockModel = MockGenerativeModel();
       service = GeminiService(model: mockModel);
     });
-
     test('parseUserCommand parses valid JSON', () async {
       when(mockModel.generateContent(any)).thenAnswer(
         (_) async => GenerateContentResponse(

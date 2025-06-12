@@ -293,8 +293,7 @@ class TaskDetailScreen extends StatelessWidget {
                       await context.read<TaskCubit>().updateTask(
                         task!.copyWith(subtasks: updatedSubtasks),
                       );
-                    }
-                  },
+                    },
                   shape: const CircleBorder(),
                   activeColor: Theme.of(context).extension<SuccessColor>()?.success,
                 ),

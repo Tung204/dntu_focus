@@ -4,7 +4,14 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
+  Future<GenerateContentResponse> Function(List<Content>)? generateContentOverride;
 
+  GeminiService({GenerativeModel? model, this.generateContentOverride}) {
+    if (model != null) {
+      _model = model;
+      return;
+    }
+    
   GeminiService({GenerativeModel? model}) {
     _model = model ?? _createDefaultModel();
   }
@@ -24,6 +31,9 @@ class GeminiService {
 
   Future<GenerateContentResponse> generateContent(List<Content> content) async {
     try {
+      if (generateContentOverride != null) {
+        return await generateContentOverride!(content);
+      }
       return await _model.generateContent(content);
     } catch (e) {
       throw Exception('Failed to generate content from Gemini API: $e');
@@ -48,7 +58,9 @@ class GeminiService {
 
     String? rawText;
     try {
-      final response = await _model.generateContent([Content.text(prompt)]);
+      final response = await (generateContentOverride != null
+          ? generateContentOverride!([Content.text(prompt)])
+          : _model.generateContent([Content.text(prompt)]));
       rawText = response.text?.trim() ?? '{}';
 
       // Xử lý phản hồi để loại bỏ Markdown (nếu có)
@@ -78,7 +90,9 @@ class GeminiService {
 
     String? rawText;
     try {
-      final response = await _model.generateContent([Content.text(prompt)]);
+      final response = await (generateContentOverride != null
+          ? generateContentOverride!([Content.text(prompt)])
+          : _model.generateContent([Content.text(prompt)]));
       rawText = response.text?.trim() ?? '[]';
       rawText = rawText.replaceAll(RegExp(r'[^\x00-\x7F]+'), '');
       // Xử lý JSON an toàn
@@ -103,7 +117,9 @@ class GeminiService {
 
     String? rawText;
     try {
-      final response = await _model.generateContent([Content.text(prompt)]);
+      final response = await (generateContentOverride != null
+          ? generateContentOverride!([Content.text(prompt)])
+          : _model.generateContent([Content.text(prompt)]));
       rawText = response.text?.trim() ?? 'Planned';
       return rawText;
     } catch (e) {
