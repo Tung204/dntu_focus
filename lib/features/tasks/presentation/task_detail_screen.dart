@@ -281,16 +281,19 @@ class TaskDetailScreen extends StatelessWidget {
               ...task!.subtasks!.map((subtask) => ListTile(
                 leading: Checkbox(
                   value: subtask['completed'] ?? false,
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     if (value == null) return;
-                    // Update the completion state locally
-                    subtask['completed'] = value;
-
-                    // Persist the change
-                    context.read<TaskCubit>().updateTask(
-                      task!.copyWith(subtasks: List<Map<String, dynamic>>.from(task!.subtasks!)),
-                    );
-                  },
+                    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks!);
+                    final index = updatedSubtasks.indexOf(subtask);
+                    if (index != -1) {
+                      updatedSubtasks[index] = {
+                        ...updatedSubtasks[index],
+                        'completed': value,
+                      };
+                      await context.read<TaskCubit>().updateTask(
+                        task!.copyWith(subtasks: updatedSubtasks),
+                      );
+                    },
                   shape: const CircleBorder(),
                   activeColor: Theme.of(context).extension<SuccessColor>()?.success,
                 ),
@@ -310,51 +313,37 @@ class TaskDetailScreen extends StatelessWidget {
               child: TextButton.icon(
                 icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
                 label: Text('Thêm subtask', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                onPressed: () {
+                onPressed: () async {
                   final TextEditingController controller = TextEditingController();
-                  showDialog(
+                  final newTitle = await showDialog<String>(
                     context: context,
                     builder: (dialogContext) {
                       return AlertDialog(
-                        title: Text('Thêm Subtask', style: Theme.of(context).textTheme.titleLarge),
+                        title: const Text('Thêm subtask'),
                         content: TextField(
                           controller: controller,
-                          decoration: InputDecoration(
-                            hintText: 'Tên subtask',
-                            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-                          ),
+                          decoration: const InputDecoration(hintText: 'Tên subtask'),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(dialogContext),
-                            child: Text('Hủy', style: Theme.of(context).textTheme.bodyMedium),
+                            child: const Text('Hủy'),
                           ),
                           TextButton(
-                            onPressed: () {
-                              final title = controller.text.trim();
-                              if (title.isEmpty) {
-                                Navigator.pop(dialogContext);
-                                return;
-                              }
-
-                              final newSubtask = {'title': title, 'completed': false};
-                              if (task!.subtasks == null) {
-                                task!.subtasks = [newSubtask];
-                              } else {
-                                task!.subtasks = List<Map<String, dynamic>>.from(task!.subtasks!)..add(newSubtask);
-                              }
-
-                              context.read<TaskCubit>().updateTask(
-                                task!.copyWith(subtasks: List<Map<String, dynamic>>.from(task!.subtasks!)),
-                              );
-                              Navigator.pop(dialogContext);
-                            },
-                            child: Text('Thêm', style: Theme.of(context).textTheme.bodyMedium),
+                            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+                            child: const Text('Thêm'),
                           ),
                         ],
                       );
                     },
                   );
+                  if (newTitle != null && newTitle.isNotEmpty) {
+                    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks ?? []);
+                    updatedSubtasks.add({'title': newTitle, 'completed': false});
+                    await context.read<TaskCubit>().updateTask(
+                      task!.copyWith(subtasks: updatedSubtasks),
+                    );
+                  }
                 },
                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 0), alignment: Alignment.centerLeft),
               ),
