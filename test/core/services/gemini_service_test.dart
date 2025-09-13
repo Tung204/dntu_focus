@@ -1,62 +1,72 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:moji_todo/core/services/gemini_service.dart';
 
-class MockGenerativeModel extends Mock implements GenerativeModel {}
 void main() {
   group('GeminiService', () {
-    late MockGenerativeModel mockModel;
-    late GeminiService service;
-
-    setUp(() {
-      mockModel = MockGenerativeModel();
-      service = GeminiService(model: mockModel);
-    });
-    test('parseUserCommand parses valid JSON', () async {
-      when(mockModel.generateContent(any)).thenAnswer(
-        (_) async => GenerateContentResponse(
-          candidates: [Candidate(content: Content.text('{"type":"task","title":"Test"}'))],
-        ),
+    test('GeminiService constructor works', () {
+      // Test constructor với generateContentOverride
+      final service = GeminiService(
+        generateContentOverride: (content) async {
+          return MockResponse('{"type":"task","title":"Test"}');
+        },
       );
+      
+      expect(service, isNotNull);
+    });
 
-      final result = await service.parseUserCommand('create');
+    test('parseUserCommand handles JSON parsing', () async {
+      final service = GeminiService(
+        generateContentOverride: (content) async {
+          return MockResponse('{"type":"task","title":"Test Task","duration":25}');
+        },
+      );
+      
+      final result = await service.parseUserCommand('create task');
       expect(result['type'], 'task');
-      expect(result['title'], 'Test');
+      expect(result['title'], 'Test Task');
+      expect(result['duration'], 25);
     });
 
     test('parseUserCommand handles invalid JSON', () async {
-      when(mockModel.generateContent(any)).thenAnswer(
-        (_) async => GenerateContentResponse(
-          candidates: [Candidate(content: Content.text('invalid json'))],
-        ),
+      final service = GeminiService(
+        generateContentOverride: (content) async {
+          return MockResponse('invalid json response');
+        },
       );
-
-      final result = await service.parseUserCommand('invalid');
+      
+      final result = await service.parseUserCommand('invalid command');
       expect(result.containsKey('error'), true);
     });
 
-    test('getSmartSuggestions parses list', () async {
-      when(mockModel.generateContent(any)).thenAnswer(
-        (_) async => GenerateContentResponse(
-          candidates: [Candidate(content: Content.text('["a","b"]'))],
-        ),
+    test('getSmartSuggestions parses list correctly', () async {
+      final service = GeminiService(
+        generateContentOverride: (content) async {
+          return MockResponse('["Suggestion 1","Suggestion 2","Suggestion 3"]');
+        },
       );
-
-      final suggestions = await service.getSmartSuggestions('context');
-      expect(suggestions, ['a', 'b']);
+      
+      final suggestions = await service.getSmartSuggestions('study context');
+      expect(suggestions, isA<List<String>>());
+      expect(suggestions.length, 3);
+      expect(suggestions[0], 'Suggestion 1');
     });
 
-    test('classifyTask returns raw text', () async {
-      when(mockModel.generateContent(any)).thenAnswer(
-        (_) async => GenerateContentResponse(
-          candidates: [Candidate(content: Content.text('Today'))],
-        ),
+    test('classifyTask returns string result', () async {
+      final service = GeminiService(
+        generateContentOverride: (content) async {
+          return MockResponse('Today');
+        },
       );
-
-      final result = await service.classifyTask('study');
+      
+      final result = await service.classifyTask('study math');
       expect(result, 'Today');
     });
   });
+}
+
+// Simple mock response class
+class MockResponse {
+  final String text;
+  
+  MockResponse(this.text);
 }

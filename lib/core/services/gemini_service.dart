@@ -4,16 +4,19 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
-  Future<GenerateContentResponse> Function(List<Content>)? generateContentOverride;
+  Future<dynamic> Function(List<Content>)? generateContentOverride;
 
   GeminiService({GenerativeModel? model, this.generateContentOverride}) {
     if (model != null) {
       _model = model;
       return;
     }
-    
-  GeminiService({GenerativeModel? model}) {
-    _model = model ?? _createDefaultModel();
+    if (generateContentOverride != null) {
+      // Không cần khởi tạo model khi có override
+      _model = GenerativeModel(model: 'test', apiKey: 'test');
+      return;
+    }
+    _model = _createDefaultModel();
   }
 
   static GenerativeModel _createDefaultModel() {
@@ -29,7 +32,7 @@ class GeminiService {
     );
   }
 
-  Future<GenerateContentResponse> generateContent(List<Content> content) async {
+  Future<dynamic> generateContent(List<Content> content) async {
     try {
       if (generateContentOverride != null) {
         return await generateContentOverride!(content);
@@ -61,10 +64,17 @@ class GeminiService {
       final response = await (generateContentOverride != null
           ? generateContentOverride!([Content.text(prompt)])
           : _model.generateContent([Content.text(prompt)]));
-      rawText = response.text?.trim() ?? '{}';
+      
+      // Handle both MockResponse and GenerateContentResponse
+      if (response is GenerateContentResponse) {
+        rawText = response.text?.trim() ?? '{}';
+      } else {
+        // MockResponse case - access text property directly
+        rawText = (response as dynamic).text?.trim() ?? '{}';
+      }
 
       // Xử lý phản hồi để loại bỏ Markdown (nếu có)
-      String jsonString = rawText;
+      String jsonString = rawText ?? '{}';
       if (jsonString.startsWith('```json')) {
         jsonString = jsonString.replaceFirst('```json', '').trim();
       }
@@ -93,8 +103,14 @@ class GeminiService {
       final response = await (generateContentOverride != null
           ? generateContentOverride!([Content.text(prompt)])
           : _model.generateContent([Content.text(prompt)]));
-      rawText = response.text?.trim() ?? '[]';
-      rawText = rawText.replaceAll(RegExp(r'[^\x00-\x7F]+'), '');
+      
+      // Handle both MockResponse and GenerateContentResponse
+      if (response is GenerateContentResponse) {
+        rawText = response.text?.trim() ?? '[]';
+      } else {
+        rawText = (response as dynamic).text?.trim() ?? '[]';
+      }
+      rawText = rawText?.replaceAll(RegExp(r'[^\x00-\x7F]+'), '') ?? '[]';
       // Xử lý JSON an toàn
       final jsonString = rawText.startsWith('[') ? rawText : '[$rawText]';
       return List<String>.from(jsonDecode(jsonString));
@@ -120,8 +136,14 @@ class GeminiService {
       final response = await (generateContentOverride != null
           ? generateContentOverride!([Content.text(prompt)])
           : _model.generateContent([Content.text(prompt)]));
-      rawText = response.text?.trim() ?? 'Planned';
-      return rawText;
+      
+      // Handle both MockResponse and GenerateContentResponse
+      if (response is GenerateContentResponse) {
+        rawText = response.text?.trim() ?? 'Planned';
+      } else {
+        rawText = (response as dynamic).text?.trim() ?? 'Planned';
+      }
+      return rawText ?? 'Planned';
     } catch (e) {
       print('Error classifying task from Gemini API: $e');
       print('Raw response: $rawText');
