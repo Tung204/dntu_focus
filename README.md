@@ -71,7 +71,11 @@ Sắp xếp công việc với dự án và thẻ, đồng bộ qua Firestore.
 - [Tính năng](#tính-năng)
 - [Hướng dẫn sử dụng](#hướng-dẫn-sử-dụng)
 - [Thành phần](#thành-phần)
-- [Cài đặt](#cài-đặt)
+- [Yêu cầu môi trường](#yêu-cầu-môi-trường)
+- [Cài đặt và chạy dự án](#cài-đặt-và-chạy-dự-án)
+- [Tài khoản Demo](#tài-khoản-demo)
+- [Màn hình đăng nhập giả lập](#màn-hình-đăng-nhập-giả-lập)
+- [Chạy nhanh](#chạy-nhanh)
 - [Kiến trúc](#kiến-trúc)
 - [Đóng góp](#đóng-góp)
 - [Giấy phép](#giấy-phép)
@@ -128,59 +132,214 @@ Sắp xếp công việc với dự án và thẻ, đồng bộ qua Firestore.
 - **WhiteNoiseMenu** [🔗](https://github.com/Tung204/dntu_focus/blob/master/lib/features/home/presentation/white_noise_menu.dart) [⭐]: Bộ chọn âm thanh môi trường để tập trung.
 - **TaskCard** [🔗](https://github.com/Tung204/dntu_focus/blob/master/lib/features/home/presentation/widgets/task_card.dart) [⭐]: Hiển thị công việc với hỗ trợ dự án/thẻ.
 
-## Cài đặt
+## Yêu cầu môi trường
 
-### Điều kiện tiên quyết
-- **Flutter** [🔗](https://flutter.dev/docs/get-started/install): Phiên bản 3.10.0 trở lên.
-- **Dart** [🔗](https://dart.dev/): Phiên bản 3.0.0 trở lên.
-- **IDE**: [Android Studio](https://developer.android.com/studio) hoặc [VS Code](https://code.visualstudio.com/).
-- **Firebase CLI** [🔗](https://firebase.google.com/docs/cli): Để cài đặt Firestore/Messaging.
-- **File .env**: Thêm khóa API (ví dụ: Gemini) vào thư mục gốc:
-  ```
-  GEMINI_API_KEY=your_api_key
-  ```
+### Backend (Express.js)
+- **Node.js**: Phiên bản 16.0.0 trở lên
+- **npm**: Phiên bản 8.0.0 trở lên
+- **MongoDB**: Phiên bản 4.4 trở lên (hoặc MongoDB Atlas)
+- **Firebase Admin SDK**: Để xác thực và quản lý người dùng
 
-### Các bước
-1. **Sao chép kho mã nguồn**:
-   ```bash
-   git clone https://github.com/Tung204/dntu_focus.git
-   cd dntu_focus
+### Mobile (Flutter)
+- **Flutter**: Phiên bản 3.10.0 trở lên
+- **Dart**: Phiên bản 3.0.0 trở lên
+- **Android Studio**: Phiên bản 2022.1 trở lên
+- **VS Code**: Với Flutter extension
+- **Firebase CLI**: Để cấu hình Firebase
+
+### Công cụ phát triển
+- **Git**: Phiên bản 2.30 trở lên
+- **Postman**: Để test API (tùy chọn)
+- **MongoDB Compass**: Để quản lý database (tùy chọn)
+
+## Cài đặt và chạy dự án
+
+### 1. Sao chép kho mã nguồn
+```bash
+git clone https://github.com/Tung204/dntu_focus.git
+cd dntu_focus
+```
+
+### 2. Cấu hình môi trường
+
+#### Tạo file .env từ .env.example
+```bash
+# Sao chép file mẫu
+cp .env.example .env
+
+# Chỉnh sửa các giá trị trong .env
+nano .env
+```
+
+#### Nội dung file .env.example
+```env
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY_ID=your-private-key-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=your-client-email
+FIREBASE_CLIENT_ID=your-client-id
+FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
+FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/dntu_focus
+# Hoặc MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/dntu_focus
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# JWT Secret
+JWT_SECRET=your-super-secret-jwt-key
+
+# Gemini AI API
+GEMINI_API_KEY=your-gemini-api-key
+
+# Email Configuration (tùy chọn)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+### 3. Chạy Backend (Express.js)
+
+```bash
+# Di chuyển vào thư mục backend
+cd functions
+
+# Cài đặt dependencies
+npm install
+
+# Chạy server development
+npm run dev
+
+# Hoặc chạy production
+npm start
+```
+
+**Backend sẽ chạy tại:** `http://localhost:3000`
+
+### 4. Chạy Mobile (Flutter)
+
+```bash
+# Quay lại thư mục gốc
+cd ..
+
+# Cài đặt Flutter dependencies
+flutter pub get
+
+# Cấu hình Firebase
+flutterfire configure
+
+# Chạy ứng dụng
+flutter run
+
+# Hoặc chạy trên thiết bị cụ thể
+flutter run -d chrome  # Web
+flutter run -d android # Android
+flutter run -d ios     # iOS
+```
+
+### 5. Cấu hình Firebase
+
+1. **Tạo dự án Firebase**:
+   - Truy cập [Firebase Console](https://console.firebase.google.com/)
+   - Tạo dự án mới hoặc sử dụng dự án hiện có
+
+2. **Cấu hình Authentication**:
+   - Bật Email/Password authentication
+   - Bật Google Sign-In (tùy chọn)
+
+3. **Cấu hình Firestore**:
+   - Tạo database Firestore
+   - Cập nhật quy tắc bảo mật:
+   ```firestore
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /tasks/{taskId} {
+         allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+       }
+       match /projects/{projectId} {
+         allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+       }
+       match /tags/{tagId} {
+         allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+       }
+       match /users/{userId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
    ```
 
-2. **Cài đặt phụ thuộc** [🔗](https://pub.dev/):
-   ```bash
-   flutter pub get
-   ```
+4. **Tải file cấu hình**:
+   - Tải `google-services.json` cho Android và đặt vào `android/app/`
+   - Tải `GoogleService-Info.plist` cho iOS và đặt vào `ios/Runner/`
 
-3. **Cấu hình Firebase** [🔗](https://firebase.google.com/docs/flutter/setup):
-    - Tạo dự án Firebase trong [Firebase Console](https://console.firebase.google.com/).
-    - Tải `google-services.json` (Android) hoặc `GoogleService-Info.plist` (iOS) và đặt vào `android/app/` hoặc `ios/Runner/`.
-    - Chạy:
-      ```bash
-      flutterfire configure
-      ```
-    - Cập nhật quy tắc Firestore:
-      ```firestore
-      rules_version = '2';
-      service cloud.firestore {
-        match /databases/{database}/documents {
-          match /tasks/{taskId} {
-            allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
-          }
-          match /projects/{projectId} {
-            allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
-          }
-          match /tags/{tagId} {
-            allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
-          }
-        }
-      }
-      ```
+## Tài khoản Demo
 
-4. **Chạy ứng dụng**:
-   ```bash
-   flutter run
-   ```
+### Tài khoản mặc định
+```
+Email: demo@dntu.edu.vn
+Password: demo123456
+```
+
+### Tài khoản test
+```
+Email: test@dntu.edu.vn
+Password: test123456
+```
+
+### Tạo tài khoản mới
+- Sử dụng tính năng đăng ký trong ứng dụng
+- Hoặc tạo qua Firebase Console
+
+## Màn hình đăng nhập giả lập
+
+Ứng dụng có màn hình đăng nhập giả lập với các tính năng:
+
+### Tính năng đăng nhập
+- **Đăng nhập bằng Email/Password**
+- **Đăng ký tài khoản mới**
+- **Quên mật khẩu** (gửi email reset)
+- **Đăng nhập bằng Google** (tùy chọn)
+- **Lưu thông tin đăng nhập** (Remember me)
+
+### Giao diện
+- **Thiết kế Material Design 3**
+- **Hỗ trợ Dark/Light mode**
+- **Responsive design** cho mọi kích thước màn hình
+- **Animation mượt mà** khi chuyển đổi
+- **Validation form** real-time
+
+### Bảo mật
+- **Mã hóa mật khẩu** bằng bcrypt
+- **JWT token** cho xác thực
+- **Rate limiting** chống brute force
+- **Input validation** và sanitization
+
+## Chạy nhanh
+
+### Backend + Mobile cùng lúc
+```bash
+# Terminal 1: Chạy Backend
+cd functions
+npm install
+npm run dev
+
+# Terminal 2: Chạy Mobile
+cd ..
+flutter pub get
+flutter run
+```
+
+### Kiểm tra kết nối
+- **Backend API**: `http://localhost:3000/api/health`
+- **Mobile App**: Mở ứng dụng và đăng nhập bằng tài khoản demo
+- **Database**: Kiểm tra kết nối MongoDB
 
 5. **Chạy kiểm thử**:
    ```bash
@@ -190,13 +349,40 @@ Sắp xếp công việc với dự án và thẻ, đồng bộ qua Firestore.
 ## Kiến trúc
 
 ### Công nghệ
-- **Giao diện**: [Flutter](https://flutter.dev/) với [Dart](https://dart.dev/), sử dụng [flutter_bloc](https://pub.dev/packages/flutter_bloc) để quản lý trạng thái và [provider](https://pub.dev/packages/provider) để chuyển đổi giao diện.
-- **Hậu cần**: [Firebase Firestore](https://firebase.google.com/products/firestore) để đồng bộ, [Firebase Messaging](https://firebase.google.com/products/cloud-messaging) cho thông báo.
-- **Lưu trữ cục bộ**: [Hive](https://pub.dev/packages/hive) cho dữ liệu offline.
-- **AI**: [Gemini Service](https://ai.google.dev/) để xử lý ngôn ngữ tự nhiên.
-- **Thư viện**: [google_fonts](https://pub.dev/packages/google_fonts), [speech_to_text](https://pub.dev/packages/speech_to_text), [flutter_dotenv](https://pub.dev/packages/flutter_dotenv) (xem [`pubspec.yaml`](pubspec.yaml)).
+
+#### Backend (Express.js)
+- **Framework**: [Express.js](https://expressjs.com/) với [Node.js](https://nodejs.org/)
+- **Database**: [MongoDB](https://www.mongodb.com/) với [Mongoose](https://mongoosejs.com/)
+- **Authentication**: [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)
+- **API**: RESTful API với JWT authentication
+- **Validation**: [Joi](https://joi.dev/) cho input validation
+- **Security**: [bcrypt](https://www.npmjs.com/package/bcrypt) cho mã hóa mật khẩu
+
+#### Mobile (Flutter)
+- **Giao diện**: [Flutter](https://flutter.dev/) với [Dart](https://dart.dev/)
+- **State Management**: [flutter_bloc](https://pub.dev/packages/flutter_bloc) và [provider](https://pub.dev/packages/provider)
+- **Hậu cần**: [Firebase Firestore](https://firebase.google.com/products/firestore) để đồng bộ
+- **Lưu trữ cục bộ**: [Hive](https://pub.dev/packages/hive) cho dữ liệu offline
+- **AI**: [Gemini Service](https://ai.google.dev/) để xử lý ngôn ngữ tự nhiên
+- **Thư viện**: [google_fonts](https://pub.dev/packages/google_fonts), [speech_to_text](https://pub.dev/packages/speech_to_text), [flutter_dotenv](https://pub.dev/packages/flutter_dotenv)
 
 ### Cấu trúc thư mục
+
+#### Backend (Express.js)
+```
+functions/
+├── src/
+│   ├── controllers/    # AuthController, TaskController, UserController
+│   ├── models/         # User, Task, Project models
+│   ├── routes/         # API routes
+│   ├── middleware/     # Auth, Validation middleware
+│   ├── services/       # Firebase, Email services
+│   └── utils/          # Helpers, constants
+├── package.json
+└── .env.example
+```
+
+#### Mobile (Flutter)
 ```
 lib/
 ├── core/
@@ -204,11 +390,13 @@ lib/
 │   ├── themes/         # Theme, ThemeProvider
 │   ├── widgets/        # CustomAppBar, CustomButton
 ├── features/
+│   ├── auth/           # LoginScreen, RegisterScreen
 │   ├── home/           # HomeScreen, PomodoroTimer, WhiteNoiseMenu
 │   ├── tasks/          # TaskManageScreen, TaskCubit
 │   ├── ai_chat/        # AIChatScreen
 │   ├── splash/         # SplashScreen
 ├── routes/             # AppRoutes
+└── main.dart
 ```
 
 ## Đóng góp
