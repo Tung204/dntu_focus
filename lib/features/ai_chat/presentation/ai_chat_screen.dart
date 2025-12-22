@@ -3,11 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:moji_todo/core/services/improved_gemini_service.dart';
 import 'package:moji_todo/core/services/unified_notification_service.dart';
+import 'package:moji_todo/core/services/firebase_service.dart';
 import 'package:moji_todo/features/home/domain/home_cubit.dart';
 import 'package:moji_todo/features/tasks/domain/task_cubit.dart';
 import 'package:moji_todo/features/tasks/data/models/task_model.dart';
 import 'package:moji_todo/core/widgets/custom_app_bar.dart';
-// import 'package:moji_todo/features/ai_chat/data/services/ai_training_service.dart'; // Tạm thời comment
+import 'package:moji_todo/features/ai_chat/data/services/ai_training_service.dart';
 import 'package:moji_todo/features/ai_chat/presentation/widgets/ai_response_card.dart';
 
 class AIChatScreen extends StatefulWidget {
@@ -26,17 +27,20 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final ImprovedGeminiService _geminiService = ImprovedGeminiService();
   bool _isProcessing = false;
   bool _showFirstTimeGuide = true;
-  // final AITrainingService _aiTrainingService = AITrainingService(FirebaseService()); // Tạm thời comment
+  final AITrainingService _aiTrainingService = AITrainingService(FirebaseService());
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
     _loadSuggestions();
-    _messages.add({
-      'role': 'assistant',
-      'content': 'Chào bạn! Mình là trợ lý AI DNTU-Focus. Bạn có thể trò chuyện với mình như:\n\n• "Làm bài tập toán 25 phút"\n• "Bắt đầu Pomodoro 15 phút"\n\nMình sẽ giúp bạn tạo task và bắt đầu Pomodoro ngay!',
-    });
+    // Chỉ thêm tin nhắn chào mừng nếu không có hướng dẫn lần đầu
+    if (!_showFirstTimeGuide) {
+      _messages.add({
+        'role': 'assistant',
+        'content': 'Chào bạn! Mình là trợ lý AI DNTU-Focus. Bạn có thể trò chuyện với mình như:\n\n• "Làm bài tập toán 25 phút 5 phút nghỉ"\n• "Ngày mai đi chợ lúc 6 sáng"\n• "Bắt đầu Pomodoro 15 phút"\n\nMình sẽ giúp bạn tạo task và bắt đầu Pomodoro ngay!',
+      });
+    }
   }
 
   void _initSpeech() async {
@@ -48,10 +52,40 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   void _loadSuggestions() async {
-    final suggestions = await _geminiService.getSmartSuggestions(context: "đang học toán");
+    // Tạo context động dựa trên tin nhắn gần nhất và thời gian
+    final dynamicContext = _getDynamicContext();
+    final recentCommands = _getRecentCommands();
+    final suggestions = await _geminiService.getSmartSuggestions(
+      context: dynamicContext,
+      recentCommands: recentCommands,
+    );
     setState(() {
       _suggestions = suggestions;
     });
+  }
+
+  String _getDynamicContext() {
+    if (_messages.isEmpty) {
+      return "bắt đầu trò chuyện";
+    }
+    final lastMessage = _messages.last;
+    if (lastMessage['role'] == 'user') {
+      return "vừa nói: ${lastMessage['content']}";
+    }
+    // Dựa trên thời gian trong ngày
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "buổi sáng";
+    if (hour < 18) return "buổi chiều";
+    return "buổi tối";
+  }
+
+  List<String> _getRecentCommands() {
+    // Lấy tối đa 5 câu lệnh gần nhất của user
+    return _messages
+        .where((msg) => msg['role'] == 'user')
+        .map((msg) => msg['content'] as String)
+        .take(5)
+        .toList();
   }
 
   Future<void> _handleMessage(String userMessage) async {
@@ -79,8 +113,15 @@ class _AIChatScreenState extends State<AIChatScreen> {
         }
       });
       
-      // Lưu log lỗi vào Firebase (tạm thời bỏ)
-      // await _aiTrainingService.logInteraction(...);
+      // Lưu log lỗi vào Firebase
+      await _aiTrainingService.logInteraction(
+        userMessage: userMessage,
+        aiResponse: response,
+        commandType: 'error',
+        commandResult: {'error': response},
+        isHelpful: false,
+        feedback: null,
+      );
     } else {
       final taskCubit = context.read<TaskCubit>();
       if (commandResult['type'] == 'task') {
@@ -180,10 +221,18 @@ class _AIChatScreenState extends State<AIChatScreen> {
       }
     }
 
-    // Lưu log tương tác thành công vào Firebase (tạm thời bỏ)
-    // if (!commandResult.containsKey('error')) {
-    //   await _aiTrainingService.logInteraction(...);
-    // }
+    // Lưu log tương tác thành công vào Firebase
+    if (!commandResult.containsKey('error')) {
+      final commandType = commandResult['type'] ?? 'unknown';
+      await _aiTrainingService.logInteraction(
+        userMessage: userMessage,
+        aiResponse: response,
+        commandType: commandType.toString(),
+        commandResult: commandResult,
+        isHelpful: null, // Người dùng có thể đánh giá sau
+        feedback: null,
+      );
+    }
 
     setState(() {
       _messages.add({
