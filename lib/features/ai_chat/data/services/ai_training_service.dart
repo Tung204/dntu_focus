@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/ai_training_log_model.dart';
-import '../../../core/services/firebase_service.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class AITrainingService {
   final FirebaseService _firebaseService;
@@ -36,7 +36,7 @@ class AITrainingService {
         feedback: feedback,
       );
 
-      final collection = _firebaseService.getUserSubCollection(userId!, 'ai_training_logs');
+      final collection = _firebaseService.getUserSubCollection(userId, 'ai_training_logs');
       await collection.add(log.toJson());
       print('AI training log saved successfully');
     } catch (e) {
@@ -57,7 +57,7 @@ class AITrainingService {
         return;
       }
 
-      final collection = _firebaseService.getUserSubCollection(userId!, 'ai_training_logs');
+      final collection = _firebaseService.getUserSubCollection(userId, 'ai_training_logs');
       await collection.doc(logId).update({
         'isHelpful': isHelpful,
         'feedback': feedback,
@@ -76,7 +76,7 @@ class AITrainingService {
         return [];
       }
 
-      final collection = _firebaseService.getUserSubCollection(userId!, 'ai_training_logs');
+      final collection = _firebaseService.getUserSubCollection(userId, 'ai_training_logs');
       final snapshot = await collection
           .orderBy('timestamp', descending: true)
           .limit(limit)
@@ -100,7 +100,7 @@ class AITrainingService {
       }
 
       final cutoffDate = DateTime.now().subtract(Duration(days: daysToKeep));
-      final collection = _firebaseService.getUserSubCollection(userId!, 'ai_training_logs');
+      final collection = _firebaseService.getUserSubCollection(userId, 'ai_training_logs');
       
       final snapshot = await collection
           .where('timestamp', isLessThan: Timestamp.fromDate(cutoffDate))

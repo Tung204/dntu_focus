@@ -37,12 +37,12 @@ class AITrainingLog {
     );
   }
 
-  static AITrainingLog fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+  static AITrainingLog fromFirestore(DocumentSnapshot<Object?> doc) {
     final data = doc.data();
     if (data == null) {
       throw Exception('Document does not exist');
     }
-    return AITrainingLog.fromJson(data, docId: doc.id);
+    return AITrainingLog.fromJson(data as Map<String, dynamic>, docId: doc.id);
   }
 
   Map<String, dynamic> toJson() {
