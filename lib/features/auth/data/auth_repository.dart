@@ -1,6 +1,7 @@
 // auth_repository.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 // Đảm bảo đường dẫn import FirebaseService là chính xác
 import '../../../core/services/firebase_service.dart'; // Hoặc đường dẫn đúng tới file firebase_service.dart
 
@@ -11,18 +12,27 @@ class AuthRepository {
   AuthRepository(this._firebaseService);
 
   Future<void> signInWithGoogle() async {
-    final GoogleSignIn googleSignIn = GoogleSignIn();
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    if (googleUser == null) throw Exception('Đăng nhập bằng Google bị hủy');
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    // Sử dụng _firebaseService đã được truyền vào (nếu FirebaseService có hàm signInWithCredential)
-    // Hiện tại, FirebaseAuth.instance được dùng trực tiếp ở đây, điều này vẫn ổn.
-    // Nếu muốn tập trung mọi thứ qua _firebaseService, bạn cần thêm các hàm wrapper trong FirebaseService.
-    await FirebaseAuth.instance.signInWithCredential(credential);
+    try {
+      if (kIsWeb) {
+        // Trên web: sử dụng Firebase Auth popup
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      } else {
+        // Trên mobile: sử dụng Google Sign-In package
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) throw Exception('Đăng nhập bằng Google bị hủy');
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      }
+    } catch (e) {
+      print('Lỗi đăng nhập Google: $e');
+      throw Exception('Đăng nhập Google thất bại: ${e.toString()}');
+    }
   }
 
   Future<void> signInWithEmail(String email, String password) async {

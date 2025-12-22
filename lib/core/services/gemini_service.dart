@@ -23,7 +23,7 @@ class GeminiService {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null) throw Exception('Gemini API Key không tìm thấy');
     return GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       apiKey: apiKey,
       safetySettings: [
         SafetySetting(HarmCategory.harassment, HarmBlockThreshold.low),
