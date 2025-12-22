@@ -24,6 +24,7 @@ import 'features/tasks/data/models/task_model.dart';
 import 'features/tasks/data/task_repository.dart';
 import 'features/tasks/domain/task_cubit.dart';
 import 'features/report/data/report_repository.dart';
+import 'firebase_options.dart';
 
 class AppData extends InheritedWidget {
   final Box<Task> taskBox;
@@ -62,7 +63,9 @@ class AppData extends InheritedWidget {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await dotenv.load(fileName: ".env");
 
   await Hive.initFlutter();

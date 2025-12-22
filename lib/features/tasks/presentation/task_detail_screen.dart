@@ -280,24 +280,28 @@ class TaskDetailScreen extends StatelessWidget {
               const SizedBox(height: 8),
               ...task!.subtasks!.map((subtask) => ListTile(
                 leading: Checkbox(
-                  value: subtask['completed'] ?? false,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks!);
-                    final index = updatedSubtasks.indexOf(subtask);
-                    if (index != -1) {
-                      updatedSubtasks[index] = {
-                        ...updatedSubtasks[index],
-                        'completed': value,
-                      };
-                      await context.read<TaskCubit>().updateTask(
-                        task!.copyWith(subtasks: updatedSubtasks),
-                      );
-                    },
-                  shape: const CircleBorder(),
-                  activeColor: Theme.of(context).extension<SuccessColor>()?.success,
-                ),
-                title: Text(
+    value: subtask['completed'] ?? false,
+    onChanged: (value) async {
+    if (value == null) return;
+
+    final updatedSubtasks = List<Map<String, dynamic>>.from(task!.subtasks!);
+    final index = updatedSubtasks.indexOf(subtask);
+
+    if (index != -1) {
+    updatedSubtasks[index] = {
+    ...updatedSubtasks[index],
+    'completed': value,
+    };
+
+    await context.read<TaskCubit>().updateTask(
+    task!.copyWith(subtasks: updatedSubtasks),
+    );
+    }
+    }, // <— QUAN TRỌNG: dấu phẩy sau block onChanged
+    shape: const CircleBorder(),
+    activeColor: Theme.of(context).extension<SuccessColor>()?.success,
+    ),
+    title: Text(
                   subtask['title'] ?? 'Subtask không có tiêu đề',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     decoration: (subtask['completed'] ?? false) ? TextDecoration.lineThrough : TextDecoration.none,

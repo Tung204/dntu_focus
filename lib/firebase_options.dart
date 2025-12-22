@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'moji-todo.firebasestorage.app',
     measurementId: 'G-1Q91C7TQM3',
   );
+
 }
