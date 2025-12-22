@@ -9,7 +9,7 @@ import 'cache_service.dart';
 /// Service cải tiến cho Gemini với caching, error handling tốt hơn,
 /// và nâng cao xử lý ngôn ngữ tự nhiên.
 class ImprovedGeminiService {
-  static const String _defaultModelName = 'gemini-1.5-flash';
+  static const String _defaultModelName = 'gemini-2.5-flash';
   static const Duration _cacheDuration = Duration(minutes: 30);
   
   late final GenerativeModel _model;
