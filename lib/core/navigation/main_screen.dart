@@ -4,8 +4,8 @@ import 'package:moji_todo/features/tasks/presentation/task_manage_screen.dart';
 import 'package:moji_todo/features/calendar/presentation/calendar_screen.dart';
 import 'package:moji_todo/features/report/presentation/report_screen.dart';
 import 'package:moji_todo/features/ai_chat/presentation/ai_chat_screen.dart';
-import '../../../core/widgets/custom_bottom_nav_bar.dart';
-import '../navigation/navigation_manager.dart';
+import 'package:moji_todo/core/widgets/custom_bottom_nav_bar.dart';
+import 'package:moji_todo/core/navigation/navigation_manager.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});

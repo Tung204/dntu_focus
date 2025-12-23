@@ -1,7 +1,7 @@
-# Sơ đồ ERD - Ứng dụng ToDo DNTU Focus
+# Sơ đồ ERD - Ứng dụng ToDo Moji Focus
 
 ## Mô tả tổng quan
-Sơ đồ ERD này mô tả cấu trúc cơ sở dữ liệu cho ứng dụng quản lý công việc DNTU Focus, bao gồm các thực thể chính và mối quan hệ giữa chúng.
+Sơ đồ ERD này mô tả cấu trúc cơ sở dữ liệu cho ứng dụng quản lý công việc Moji Focus, bao gồm các thực thể chính và mối quan hệ giữa chúng.
 
 ## Sơ đồ ERD
 

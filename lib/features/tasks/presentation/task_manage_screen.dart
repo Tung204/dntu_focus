@@ -3,28 +3,66 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import '../../../core/themes/design_tokens.dart';
 import '../data/models/project_model.dart';
 import '../data/models/project_tag_repository.dart';
 import '../data/models/tag_model.dart';
 import '../domain/task_cubit.dart';
 import 'manage_project_and_tags/manage_projects_tags_screen.dart';
 import 'widgets/task_category_card.dart';
+import 'widgets/search_bar_widget.dart';
 import 'add_task/add_task_bottom_sheet.dart';
 import 'task_list_screen.dart';
 import 'trash_screen.dart';
 import 'completed_tasks_screen.dart';
-// import 'package:collection/collection.dart'; // Có thể cần cho firstWhereOrNull nếu dùng
 
-class TaskManageScreen extends StatelessWidget {
+class TaskManageScreen extends StatefulWidget {
   const TaskManageScreen({super.key});
 
   @override
+  State<TaskManageScreen> createState() => _TaskManageScreenState();
+}
+
+class _TaskManageScreenState extends State<TaskManageScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Tính aspect ratio động cho grid items
+  double _calculateAspectRatio(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 48 - 12) / 2;
+    final minHeight = 85.0;
+    return cardWidth / minHeight;
+  }
+
+  /// Tính aspect ratio cho compact cards (Hoàn thành, Thùng rác)
+  double _calculateCompactAspectRatio(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 48 - 12) / 2;
+    final minHeight = 50.0;
+    return cardWidth / minHeight;
+  }
+
+  /// Lấy số cột dựa trên kích thước màn hình
+  int _getCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width > 600) return 3;
+    return 2;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return MediaQuery(
         data: MediaQuery.of(context).copyWith(
-          padding: const EdgeInsets.only(top: 40), // Ép thêm padding phía trên
+          padding: const EdgeInsets.only(top: 40),
         ),
         child: Scaffold(
           appBar: const CustomAppBar(),
@@ -45,25 +83,19 @@ class TaskManageScreen extends StatelessWidget {
 
     return BlocBuilder<TaskCubit, TaskState>(
       builder: (context, state) {
-        // Lấy allProjects từ state để tra cứu tên và thông tin khác của project
         final List<Project> allProjects = state.allProjects;
-
         final categorizedTasks = context.read<TaskCubit>().getCategorizedTasks();
         final tasksByProject = context.read<TaskCubit>().getTasksByProject();
 
-        // Các map projectBorderColors và projectIcons của bạn có thể cần được điều chỉnh
-        // để sử dụng project.id làm key, hoặc bạn sẽ tra cứu màu/icon trực tiếp từ ProjectModel
-        // Hiện tại, tôi sẽ giữ nguyên cách bạn dùng tên project làm key cho map này,
-        // và chúng ta sẽ lấy tên project từ allProjects để tra cứu trong các map này.
         final projectBorderColors = {
           'Pomodoro App': Colors.red,
           'Fashion App': Colors.green[200]!,
           'AI Chatbot App': Colors.cyan[200]!,
           'Dating App': Colors.pink[200]!,
           'Quiz App': Colors.blue[200]!,
-          'News App': Colors.blue[200]!, // Có vẻ trùng màu với Quiz App
-          'General': Colors.blue[200]!,  // Cũng trùng màu
-          'no_project_id_display_name': Colors.grey, // Key cho project không có ID (nếu bạn đặt tên hiển thị riêng)
+          'News App': Colors.blue[200]!,
+          'General': Colors.blue[200]!,
+          'no_project_id_display_name': Colors.grey,
         };
         final projectIcons = {
           'Pomodoro App': Icons.local_pizza_outlined,
@@ -76,25 +108,42 @@ class TaskManageScreen extends StatelessWidget {
           'no_project_id_display_name': Icons.folder_off_outlined,
         };
 
-        final spacing = 12.0;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final iconSize = screenWidth < 360 ? 22.0 : 26.0;
+        final titleSize = screenWidth < 360 ? 18.0 : 20.0;
 
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            padding: const EdgeInsets.only(top: 40), // Ép thêm padding phía trên
-          ),
-          child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              automaticallyImplyLeading: false,
-              title: Text(
-                'Manage Tasks',
-                style: Theme.of(context).textTheme.titleLarge,
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            automaticallyImplyLeading: false,
+            leadingWidth: screenWidth * 0.15,
+            leading: Padding(
+              padding: EdgeInsets.only(left: screenWidth * 0.05),
+              child: Icon(
+                Icons.notifications_outlined,
+                color: Theme.of(context).iconTheme.color,
+                size: iconSize,
               ),
-              centerTitle: true,
-              actions: [
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
+            ),
+            title: Text(
+              'Moji Focus',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color,
+                fontSize: titleSize,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: screenWidth * 0.05),
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert,
+                      color: Theme.of(context).iconTheme.color,
+                      size: iconSize),
                   onSelected: (value) {
                     if (value == 'Manage Projects and Tags') {
                       Navigator.push(
@@ -110,28 +159,50 @@ class TaskManageScreen extends StatelessWidget {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'Manage Projects and Tags',
-                      child: Text('Manage Projects and Tags'),
+                      child: Text('Quản lý Dự án và Nhãn'),
                     ),
                   ],
                 ),
-              ],
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(56),
+              child: Padding(
+                padding: FigmaSpacing.screenPadding.copyWith(
+                  top: 0,
+                  bottom: FigmaSpacing.sm,
+                ),
+                child: SearchBarWidget(
+                  controller: _searchController,
+                  hintText: 'Tìm kiếm',
+                  onChanged: (value) {
+                    // TODO: Implement search filtering logic
+                  },
+                ),
+              ),
             ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: spacing,
-                    mainAxisSpacing: spacing,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 2,
-                    children: [
+          ),
+          body: SafeArea(
+            top: false,
+            child: CustomScrollView(
+              slivers: [
+                // Category Cards Grid (4 cards với details)
+                SliverPadding(
+                  padding: FigmaSpacing.screenPadding
+                      .copyWith(bottom: 0, top: FigmaSpacing.md),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _getCrossAxisCount(context),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: _calculateAspectRatio(context),
+                    ),
+                    delegate: SliverChildListDelegate([
                       TaskCategoryCard(
                         title: 'Hôm nay',
-                        totalTime: context.read<TaskCubit>().calculateTotalTime(categorizedTasks['Today'] ?? []),
+                        totalTime: context
+                            .read<TaskCubit>()
+                            .calculateTotalTime(categorizedTasks['Today'] ?? []),
                         taskCount: categorizedTasks['Today']?.length ?? 0,
                         borderColor: Colors.green,
                         icon: Icons.wb_sunny_outlined,
@@ -140,46 +211,52 @@ class TaskManageScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TaskListScreen(category: 'Today'),
+                              builder: (context) =>
+                                  const TaskListScreen(category: 'Today'),
                             ),
                           );
                         },
                       ),
                       TaskCategoryCard(
                         title: 'Ngày mai',
-                        totalTime: context.read<TaskCubit>().calculateTotalTime(categorizedTasks['Tomorrow'] ?? []),
+                        totalTime: context.read<TaskCubit>().calculateTotalTime(
+                            categorizedTasks['Tomorrow'] ?? []),
                         taskCount: categorizedTasks['Tomorrow']?.length ?? 0,
-                        borderColor: Colors.blue,
+                        borderColor: Colors.orange,
                         icon: Icons.wb_cloudy_outlined,
-                        iconColor: Colors.blue,
+                        iconColor: Colors.orange,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TaskListScreen(category: 'Tomorrow'),
+                              builder: (context) =>
+                                  const TaskListScreen(category: 'Tomorrow'),
                             ),
                           );
                         },
                       ),
                       TaskCategoryCard(
                         title: 'Tuần này',
-                        totalTime: context.read<TaskCubit>().calculateTotalTime(categorizedTasks['This Week'] ?? []),
+                        totalTime: context.read<TaskCubit>().calculateTotalTime(
+                            categorizedTasks['This Week'] ?? []),
                         taskCount: categorizedTasks['This Week']?.length ?? 0,
-                        borderColor: Colors.orange,
+                        borderColor: Colors.blue,
                         icon: Icons.calendar_today_outlined,
-                        iconColor: Colors.orange,
+                        iconColor: Colors.blue,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TaskListScreen(category: 'This Week'),
+                              builder: (context) =>
+                                  const TaskListScreen(category: 'This Week'),
                             ),
                           );
                         },
                       ),
                       TaskCategoryCard(
-                        title: 'Đã lên kế hoạch',
-                        totalTime: context.read<TaskCubit>().calculateTotalTime(categorizedTasks['Planned'] ?? []),
+                        title: 'Kế hoạch',
+                        totalTime: context.read<TaskCubit>().calculateTotalTime(
+                            categorizedTasks['Planned'] ?? []),
                         taskCount: categorizedTasks['Planned']?.length ?? 0,
                         borderColor: Colors.purple,
                         icon: Icons.event_note_outlined,
@@ -188,18 +265,34 @@ class TaskManageScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TaskListScreen(category: 'Planned'),
+                              builder: (context) =>
+                                  const TaskListScreen(category: 'Planned'),
                             ),
                           );
                         },
                       ),
+                    ]),
+                  ),
+                ),
+
+                // Compact Cards Grid (Hoàn thành, Thùng rác)
+                SliverPadding(
+                  padding: FigmaSpacing.screenPadding.copyWith(top: 12),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _getCrossAxisCount(context),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: _calculateCompactAspectRatio(context),
+                    ),
+                    delegate: SliverChildListDelegate([
                       TaskCategoryCard(
-                        title: 'Đã hoàn thành',
+                        title: 'Hoàn thành',
                         totalTime: '',
                         taskCount: categorizedTasks['Completed']?.length ?? 0,
-                        borderColor: Colors.green[200]!,
+                        borderColor: Colors.green[300]!,
                         icon: Icons.check_circle_outline,
-                        iconColor: Colors.green[200]!,
+                        iconColor: Colors.green[300]!,
                         showDetails: false,
                         isCompact: true,
                         onTap: () {
@@ -215,9 +308,9 @@ class TaskManageScreen extends StatelessWidget {
                         title: 'Thùng rác',
                         totalTime: '',
                         taskCount: categorizedTasks['Trash']?.length ?? 0,
-                        borderColor: Colors.red,
+                        borderColor: Colors.orange[300]!,
                         icon: Icons.delete_outline,
-                        iconColor: Colors.red,
+                        iconColor: Colors.orange[300]!,
                         showDetails: false,
                         isCompact: true,
                         onTap: () {
@@ -229,100 +322,139 @@ class TaskManageScreen extends StatelessWidget {
                           );
                         },
                       ),
-                    ],
+                    ]),
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Dự án',
-                    style: Theme.of(context).textTheme.titleLarge,
+                ),
+
+                // Projects Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: FigmaSpacing.screenPadding.copyWith(
+                      top: FigmaSpacing.lg,
+                      bottom: FigmaSpacing.md,
+                    ),
+                    child: Text(
+                      'Dự án',
+                      style: FigmaTextStyles.h3.copyWith(
+                        color: isDark
+                            ? FigmaColors.textOnPrimary
+                            : FigmaColors.textPrimary,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: spacing,
-                    mainAxisSpacing: spacing,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 2,
-                    children: tasksByProject.keys.map((projectIdFromKey) { // Đổi tên biến để rõ ràng
-                      String projectNameDisplay;
-                      Color projectColorDisplay;
-                      IconData? projectIconDisplay;
-                      Project? projectModel; // Biến để lưu ProjectModel tìm được
+                ),
 
-                      if (projectIdFromKey == 'no_project_id') { // Key bạn dùng cho task không có project trong TaskCubit
-                        projectNameDisplay = 'Không có dự án';
-                        projectColorDisplay = projectBorderColors['no_project_id_display_name'] ?? Colors.grey;
-                        projectIconDisplay = projectIcons['no_project_id_display_name'];
-                      } else {
-                        try {
-                          // Tìm ProjectModel từ allProjects bằng projectIdFromKey
-                          projectModel = allProjects.firstWhere((p) => p.id == projectIdFromKey);
-                          projectNameDisplay = projectModel.name;
-                          // Lấy màu và icon trực tiếp từ ProjectModel nếu có, hoặc từ map nếu bạn muốn giữ map
-                          projectColorDisplay = projectModel.color; // Ưu tiên màu từ model
-                          projectIconDisplay = projectModel.icon; // Lấy icon từ model (nếu đã thêm)
+                // Project Cards Grid
+                SliverPadding(
+                  padding: FigmaSpacing.screenPadding,
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _getCrossAxisCount(context),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: _calculateAspectRatio(context),
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final projectIdFromKey =
+                            tasksByProject.keys.toList()[index];
+                        String projectNameDisplay;
+                        Color projectColorDisplay;
+                        IconData? projectIconDisplay;
+                        Project? projectModel;
 
-                          // Fallback nếu ProjectModel chưa có icon, hoặc bạn muốn dùng map projectIcons
-                          projectIconDisplay ??= projectIcons[projectModel.name];
-                          // Fallback cho màu nếu projectModel.color không hợp lệ hoặc bạn muốn dùng map
-                          // projectColorDisplay = projectBorderColors[projectModel.name] ?? projectModel.color;
-
-                        } catch (e) {
-                          print('Lỗi TaskManageScreen: Không tìm thấy project với ID: $projectIdFromKey trong state.allProjects');
-                          projectNameDisplay = 'Dự án ID: ${projectIdFromKey.substring(0, (projectIdFromKey.length > 8) ? 8 : projectIdFromKey.length)}...';
-                          projectColorDisplay = Colors.grey;
-                          projectIconDisplay = Icons.folder_off_outlined;
+                        if (projectIdFromKey == 'no_project_id') {
+                          projectNameDisplay = 'Không có dự án';
+                          projectColorDisplay =
+                              projectBorderColors['no_project_id_display_name'] ??
+                                  Colors.grey;
+                          projectIconDisplay =
+                              projectIcons['no_project_id_display_name'];
+                        } else {
+                          try {
+                            projectModel = allProjects
+                                .firstWhere((p) => p.id == projectIdFromKey);
+                            projectNameDisplay = projectModel.name;
+                            projectColorDisplay = projectModel.color;
+                            projectIconDisplay = projectModel.icon;
+                            projectIconDisplay ??=
+                                projectIcons[projectModel.name];
+                          } catch (e) {
+                            debugPrint(
+                                'Lỗi TaskManageScreen: Không tìm thấy project với ID: $projectIdFromKey');
+                            projectNameDisplay =
+                                'Dự án ID: ${projectIdFromKey.substring(0, (projectIdFromKey.length > 8) ? 8 : projectIdFromKey.length)}...';
+                            projectColorDisplay = Colors.grey;
+                            projectIconDisplay = Icons.folder_off_outlined;
+                          }
                         }
-                      }
 
-                      return TaskCategoryCard(
-                        title: projectNameDisplay, // Hiển thị tên project đã tra cứu
-                        totalTime: context.read<TaskCubit>().calculateTotalTime(tasksByProject[projectIdFromKey]!),
-                        taskCount: tasksByProject[projectIdFromKey]!.length,
-                        borderColor: projectColorDisplay,
-                        icon: projectIconDisplay,
-                        iconColor: projectColorDisplay,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              // Truyền projectId (là projectIdFromKey) vào TaskListScreen
-                              builder: (context) => TaskListScreen(
-                                category: 'project', // Để TaskListScreen biết là đang xem theo project
-                                filterId: projectIdFromKey == 'no_project_id' ? null : projectIdFromKey, // Truyền projectId
-                                // Có thể truyền cả project name nếu TaskListScreen cần hiển thị ngay
-                                // initialScreenTitle: projectNameDisplay
+                        return TaskCategoryCard(
+                          title: projectNameDisplay,
+                          totalTime: context.read<TaskCubit>().calculateTotalTime(
+                              tasksByProject[projectIdFromKey]!),
+                          taskCount: tasksByProject[projectIdFromKey]!.length,
+                          borderColor: projectColorDisplay,
+                          icon: projectIconDisplay,
+                          iconColor: projectColorDisplay,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TaskListScreen(
+                                  category: 'project',
+                                  filterId: projectIdFromKey == 'no_project_id'
+                                      ? null
+                                      : projectIdFromKey,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    }).toList(),
+                            );
+                          },
+                        );
+                      },
+                      childCount: tasksByProject.length,
+                    ),
                   ),
-                  const SizedBox(height: 72),
-                ],
-              ),
+                ),
+
+                // Bottom spacing for FAB
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 80),
+                ),
+              ],
             ),
-            floatingActionButton: FloatingActionButton(
-              heroTag: 'tasks_fab_manage_screen', // Đổi heroTag nếu cần
-              backgroundColor: Theme.of(context).floatingActionButtonTheme.backgroundColor,
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.8,
-                  ),
-                  builder: (_) => BlocProvider.value(
-                    value: BlocProvider.of<TaskCubit>(context), // Cung cấp TaskCubit hiện tại
+          ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'tasks_fab_manage_screen',
+            backgroundColor:
+                Theme.of(context).floatingActionButtonTheme.backgroundColor,
+            onPressed: () {
+              debugPrint('FAB pressed - showing AddTaskBottomSheet');
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                builder: (bottomSheetContext) {
+                  debugPrint('Building AddTaskBottomSheet');
+                  return BlocProvider.value(
+                    value: context.read<TaskCubit>(),
                     child: AddTaskBottomSheet(
                       repository: projectTagRepository,
                     ),
-                  ),
-                );
-              },
-              child: Icon(Icons.add, color: Theme.of(context).floatingActionButtonTheme.foregroundColor),
+                  );
+                },
+              );
+            },
+            child: Icon(
+              Icons.add,
+              color:
+                  Theme.of(context).floatingActionButtonTheme.foregroundColor,
             ),
           ),
         );

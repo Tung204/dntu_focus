@@ -126,12 +126,17 @@ class GeminiService {
   }
 
   Future<String> classifyTask(String taskTitle) async {
+    // Validation: Nếu title rỗng, trả về Planned
+    if (taskTitle.trim().isEmpty) {
+      print('Empty task title, returning default category: Planned');
+      return 'Planned';
+    }
+    
     final prompt = '''
-    Phân loại task sau thành danh mục (Today, Tomorrow, This Week, Planned, Completed, Trash):
+    Phân loại task sau thành danh mục (Today, Tomorrow, This Week, Planned):
     - Task: "$taskTitle"
     - Nếu không có thời gian cụ thể, mặc định là Planned.
-    - Nếu có từ "hoàn thành" hoặc "xong", phân loại là Completed.
-    Trả về tên danh mục, không thêm ký tự Markdown.
+    - QUAN TRỌNG: Trả về CHỈ MỘT TỪ (Today hoặc Tomorrow hoặc This Week hoặc Planned), không thêm gì khác.
     ''';
 
     String? rawText;
@@ -146,7 +151,15 @@ class GeminiService {
       } else {
         rawText = (response as dynamic).text?.trim() ?? 'Planned';
       }
-      return rawText ?? 'Planned';
+      
+      // Validate response - chỉ chấp nhận các category hợp lệ
+      final validCategories = ['Today', 'Tomorrow', 'This Week', 'Planned'];
+      if (validCategories.contains(rawText)) {
+        return rawText!;
+      }
+      
+      print('Invalid category from Gemini: $rawText, using default: Planned');
+      return 'Planned';
     } catch (e) {
       print('Error classifying task from Gemini API: $e');
       print('Raw response: $rawText');

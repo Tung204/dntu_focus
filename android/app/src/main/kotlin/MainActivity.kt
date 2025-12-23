@@ -82,6 +82,18 @@ class MainActivity : FlutterActivity() {
                 enableVibration(false)
             }
             mgr.createNotificationChannel(silentChannel)
+
+            // --- NEW: Exit Blocking Channel ---
+            val exitBlockingChannel = NotificationChannel(
+                "exit_blocking_channel",
+                "Focus Mode Alert",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alert when you try to exit during focus session"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500) // Rung 2 lần
+            }
+            mgr.createNotificationChannel(exitBlockingChannel)
         }
     }
 
@@ -128,6 +140,26 @@ class MainActivity : FlutterActivity() {
                     startActivityForResult(intent, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
                     result.success(null)
                 }
+                "checkDNDPermission" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        val hasPermission = notificationManager.isNotificationPolicyAccessGranted
+                        Log.d("MainActivity", "checkDNDPermission: $hasPermission")
+                        result.success(hasPermission)
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "requestDNDPermission" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Log.d("MainActivity", "Requesting DND permission")
+                        val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                        startActivity(intent)
+                        result.success(null)
+                    } else {
+                        result.success(null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -149,6 +181,51 @@ class MainActivity : FlutterActivity() {
                     Log.d("MainActivity", "setAppBlockingEnabled called with enabled: $enabled")
                     AppBlockService.setAppBlockingEnabled(enabled)
                     result.success(true)
+                }
+                "setKeepScreenOn" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    Log.d("MainActivity", "setKeepScreenOn called with enabled: $enabled")
+                    if (enabled) {
+                        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                    result.success(true)
+                }
+                "setBlockNotifications" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    Log.d("MainActivity", "setBlockNotifications called with enabled: $enabled")
+                    
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        
+                        // Check if we have DND access
+                        if (notificationManager.isNotificationPolicyAccessGranted) {
+                            if (enabled) {
+                                // Enable DND mode - Priority only (alarms still work)
+                                notificationManager.setInterruptionFilter(
+                                    NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                                )
+                                Log.d("MainActivity", "DND mode enabled - Priority only")
+                            } else {
+                                // Disable DND mode - All notifications allowed
+                                notificationManager.setInterruptionFilter(
+                                    NotificationManager.INTERRUPTION_FILTER_ALL
+                                )
+                                Log.d("MainActivity", "DND mode disabled - All notifications allowed")
+                            }
+                            result.success(true)
+                        } else {
+                            // Request DND permission
+                            Log.d("MainActivity", "Requesting DND permission")
+                            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                            startActivity(intent)
+                            result.success(false)
+                        }
+                    } else {
+                        Log.d("MainActivity", "DND mode not supported on this Android version")
+                        result.success(false)
+                    }
                 }
                 else -> result.notImplemented()
             }
@@ -436,6 +513,11 @@ class MainActivity : FlutterActivity() {
                     "COMPLETED_ALL_SESSIONS" -> {
                         methodChannel?.invokeMethod("completedAllSessions", null)
                         Log.d("MainActivity", "Invoked completedAllSessions on Flutter via handleNotificationIntent.")
+                    }
+                    "RETURN_TO_FOCUS" -> {
+                        // Exit Blocking notification tapped - just open app, no special action needed
+                        // The notification will be cancelled automatically in Flutter when app resumes
+                        Log.d("MainActivity", "User returned to focus session from exit blocking notification")
                     }
                     else -> {
                         Log.d("MainActivity", "Generic notification tap, HomeCubit will restore state automatically.")

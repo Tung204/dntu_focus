@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../routes/app_routes.dart';
 import '../domain/auth_cubit.dart';
+import '../../../core/themes/design_tokens.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +18,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _acceptTerms = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -57,16 +60,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: FigmaColors.background,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: BlocConsumer<AuthCubit, AuthState>(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenHeight = constraints.maxHeight;
+            final screenWidth = constraints.maxWidth;
+            
+            // Responsive sizing
+            final logoSize = screenHeight * 0.1;
+            final spacing = screenHeight * 0.015;
+            final fieldHeight = screenHeight * 0.07;
+            
+            return BlocConsumer<AuthCubit, AuthState>(
               listener: (context, state) {
                 if (state is AuthAuthenticated) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
-                      backgroundColor: colorScheme.error,
+                      backgroundColor: FigmaColors.error,
                     ),
                   );
                 }
@@ -86,58 +93,111 @@ class _RegisterScreenState extends State<RegisterScreen> {
               builder: (context, state) {
                 final bool isLoading = state is AuthLoading;
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildHeader(textTheme),
-                    const SizedBox(height: 32),
-                    _buildEmailField(isLoading),
-                    const SizedBox(height: 16),
-                    _buildUsernameField(isLoading),
-                    const SizedBox(height: 16),
-                    _buildPasswordField(isLoading),
-                    const SizedBox(height: 16),
-                    _buildConfirmPasswordField(isLoading),
-                    const SizedBox(height: 24),
-                    _buildTermsCheckbox(),
-                    const SizedBox(height: 24),
-                    if (isLoading)
-                      const Center(child: CircularProgressIndicator())
-                    else
-                      _buildSignUpButton(),
-                    const SizedBox(height: 32),
-                    _buildSignInNavigation(context, isLoading, textTheme),
-                  ],
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Spacer(flex: 2),
+                      
+                      // Header
+                      _buildHeader(logoSize, screenHeight),
+                      
+                      SizedBox(height: spacing * 2),
+                      
+                      // Email Field
+                      SizedBox(
+                        height: fieldHeight,
+                        child: _buildEmailField(isLoading),
+                      ),
+                      
+                      SizedBox(height: spacing),
+                      
+                      // Username Field
+                      SizedBox(
+                        height: fieldHeight,
+                        child: _buildUsernameField(isLoading),
+                      ),
+                      
+                      SizedBox(height: spacing),
+                      
+                      // Password Field
+                      SizedBox(
+                        height: fieldHeight,
+                        child: _buildPasswordField(isLoading),
+                      ),
+                      
+                      SizedBox(height: spacing),
+                      
+                      // Confirm Password Field
+                      SizedBox(
+                        height: fieldHeight,
+                        child: _buildConfirmPasswordField(isLoading),
+                      ),
+                      
+                      SizedBox(height: spacing * 1.5),
+                      
+                      // Terms Checkbox
+                      _buildTermsCheckbox(screenHeight),
+                      
+                      SizedBox(height: spacing * 1.5),
+                      
+                      // Sign Up Button
+                      SizedBox(
+                        height: fieldHeight * 0.9,
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _buildSignUpButton(),
+                      ),
+                      
+                      SizedBox(height: spacing * 2),
+                      
+                      // Sign In Navigation
+                      _buildSignInNavigation(context, isLoading, screenHeight),
+                      
+                      const Spacer(flex: 1),
+                    ],
+                  ),
                 );
               },
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  // --- CÁC HÀM BUILD UI CHUYÊN NGHIỆP ---
+  // --- CÁC HÀM BUILD UI RESPONSIVE ---
 
-  Widget _buildHeader(TextTheme textTheme) {
+  Widget _buildHeader(double logoSize, double screenHeight) {
+    final titleSize = screenHeight < 700 ? 22.0 : 26.0;
+    final subtitleSize = screenHeight < 700 ? 13.0 : 15.0;
+    
     return Column(
       children: [
-        // Dùng lại logo và style tương tự trang Login
         Image.asset(
-          'assets/images/logo_moji.png',
-          height: 80,
-          width: 80,
+          'assets/images/logo_inapp.png',
+          height: logoSize,
+          width: logoSize,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: screenHeight * 0.015),
         Text(
           'Create Account',
-          style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: titleSize,
+            fontWeight: FontWeight.w700,
+            color: FigmaColors.textPrimary,
+          ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: screenHeight * 0.008),
         Text(
           'Start your productive journey today!',
-          style: textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: subtitleSize,
+            fontWeight: FontWeight.w500,
+            color: FigmaColors.textSecondary,
+          ),
         ),
       ],
     );
@@ -150,12 +210,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: 'Email',
         prefixIcon: const Icon(Icons.email_outlined),
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
+      style: FigmaTextStyles.input,
       keyboardType: TextInputType.emailAddress,
       enabled: !isLoading,
     );
@@ -168,12 +231,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: 'Username',
         prefixIcon: const Icon(Icons.person_outline),
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
+      style: FigmaTextStyles.input,
       enabled: !isLoading,
     );
   }
@@ -184,14 +250,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: InputDecoration(
         hintText: 'Password',
         prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: FigmaColors.textSecondary,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ),
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
-      obscureText: true,
+      style: FigmaTextStyles.input,
+      obscureText: _obscurePassword,
       enabled: !isLoading,
     );
   }
@@ -202,45 +282,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: InputDecoration(
         hintText: 'Confirm Password',
         prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+            color: FigmaColors.textSecondary,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscureConfirmPassword = !_obscureConfirmPassword;
+            });
+          },
+        ),
         filled: true,
-        fillColor: Colors.grey.shade200,
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
-      obscureText: true,
+      style: FigmaTextStyles.input,
+      obscureText: _obscureConfirmPassword,
       enabled: !isLoading,
     );
   }
 
-  Widget _buildTermsCheckbox() {
+  Widget _buildTermsCheckbox(double screenHeight) {
+    final fontSize = screenHeight < 700 ? 12.0 : 14.0;
+    
     return Row(
       children: [
-        Checkbox(
-          value: _acceptTerms,
-          onChanged: (value) {
-            setState(() {
-              _acceptTerms = value ?? false;
-            });
-          },
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: Checkbox(
+            value: _acceptTerms,
+            activeColor: FigmaColors.primary,
+            onChanged: (value) {
+              setState(() {
+                _acceptTerms = value ?? false;
+              });
+            },
+          ),
         ),
+        const SizedBox(width: 8),
         Expanded(
           child: Text.rich(
             TextSpan(
               text: 'I agree to the ',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+              style: TextStyle(
+                fontSize: fontSize,
+                color: FigmaColors.textSecondary,
+              ),
               children: [
                 TextSpan(
                   text: 'Terms & Conditions',
-                  style: const TextStyle(
-                    color: Colors.blue,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    color: FigmaColors.primary,
                     decoration: TextDecoration.underline,
                   ),
-                  recognizer: TapGestureRecognizer()..onTap = () {
-                    // TODO: Mở link đến trang Terms
-                    print('Navigate to Terms & Conditions');
-                  },
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      print('Navigate to Terms & Conditions');
+                    },
                 ),
               ],
             ),
@@ -254,27 +360,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return ElevatedButton(
       onPressed: _onRegisterPressed,
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: Colors.red.shade400,
+        backgroundColor: FigmaColors.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
+        ),
       ),
-      child: const Text('CREATE ACCOUNT', style: TextStyle(fontWeight: FontWeight.bold)),
+      child: const Text(
+        'CREATE ACCOUNT',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+      ),
     );
   }
 
-  Widget _buildSignInNavigation(BuildContext context, bool isLoading, TextTheme textTheme) {
+  Widget _buildSignInNavigation(BuildContext context, bool isLoading, double screenHeight) {
+    final fontSize = screenHeight < 700 ? 13.0 : 15.0;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Already have an account?", style: textTheme.bodyMedium),
+        Text(
+          "Already have an account?",
+          style: TextStyle(
+            fontSize: fontSize,
+            color: FigmaColors.textSecondary,
+          ),
+        ),
         TextButton(
-          onPressed: isLoading ? null : () => Navigator.pop(context), // Quay lại màn hình trước đó
+          onPressed: isLoading ? null : () => Navigator.pop(context),
           child: Text(
             'Log In',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.red.shade400,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              color: FigmaColors.primary,
             ),
           ),
         ),

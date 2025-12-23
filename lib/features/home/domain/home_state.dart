@@ -9,8 +9,11 @@ class HomeState extends Equatable {
   final int currentSession; // Số session làm việc đã hoàn thành trong cycle hiện tại
   final int totalSessions;  // Tổng số session làm việc trong một cycle
   final bool isStrictModeEnabled;
+  final bool isBlockNotificationsEnabled; // NEW - Block All Notifications
+  final bool isBlockPhoneCallsEnabled;     // NEW - Block Phone Calls
   final bool isAppBlockingEnabled;
   final bool isFlipPhoneEnabled;
+  final bool isLockPhoneEnabled;           // NEW - Lock Phone (Keep Screen On)
   final bool isExitBlockingEnabled;
   final List<String> blockedApps;
   final String timerMode;
@@ -25,6 +28,10 @@ class HomeState extends Equatable {
   final double whiteNoiseVolume;
   final bool isCountingUp;
   final DateTime? currentSessionActualStartTime; // <<< THÊM DÒNG NÀY: Thời điểm bắt đầu thực tế của phiên hiện tại
+  
+  // NEW: Permission states
+  final bool hasDNDPermission;           // For Block Notifications
+  final bool hasAccessibilityPermission; // For Block Other Apps
 
   const HomeState({
     this.selectedTask,
@@ -35,8 +42,11 @@ class HomeState extends Equatable {
     this.currentSession = 0,
     this.totalSessions = 4,
     this.isStrictModeEnabled = false,
+    this.isBlockNotificationsEnabled = false,
+    this.isBlockPhoneCallsEnabled = false,
     this.isAppBlockingEnabled = false,
     this.isFlipPhoneEnabled = false,
+    this.isLockPhoneEnabled = false,
     this.isExitBlockingEnabled = false,
     this.blockedApps = const [],
     this.timerMode = '25:00 - 00:00',
@@ -51,6 +61,8 @@ class HomeState extends Equatable {
     this.whiteNoiseVolume = 1.0,
     this.isCountingUp = false,
     this.currentSessionActualStartTime, // <<< THÊM DÒNG NÀY
+    this.hasDNDPermission = false,
+    this.hasAccessibilityPermission = false,
   });
 
   HomeState copyWith({
@@ -62,8 +74,11 @@ class HomeState extends Equatable {
     int? currentSession,
     int? totalSessions,
     bool? isStrictModeEnabled,
+    bool? isBlockNotificationsEnabled,
+    bool? isBlockPhoneCallsEnabled,
     bool? isAppBlockingEnabled,
     bool? isFlipPhoneEnabled,
+    bool? isLockPhoneEnabled,
     bool? isExitBlockingEnabled,
     List<String>? blockedApps,
     String? timerMode,
@@ -79,6 +94,8 @@ class HomeState extends Equatable {
     bool? isCountingUp,
     DateTime? currentSessionActualStartTime, // <<< THÊM DÒNG NÀY
     bool clearCurrentSessionActualStartTime = false, // <<< THÊM DÒNG NÀY để cho phép xóa giá trị
+    bool? hasDNDPermission,
+    bool? hasAccessibilityPermission,
   }) {
     return HomeState(
       selectedTask: selectedTask ?? this.selectedTask,
@@ -89,8 +106,11 @@ class HomeState extends Equatable {
       currentSession: currentSession ?? this.currentSession,
       totalSessions: totalSessions ?? this.totalSessions,
       isStrictModeEnabled: isStrictModeEnabled ?? this.isStrictModeEnabled,
+      isBlockNotificationsEnabled: isBlockNotificationsEnabled ?? this.isBlockNotificationsEnabled,
+      isBlockPhoneCallsEnabled: isBlockPhoneCallsEnabled ?? this.isBlockPhoneCallsEnabled,
       isAppBlockingEnabled: isAppBlockingEnabled ?? this.isAppBlockingEnabled,
       isFlipPhoneEnabled: isFlipPhoneEnabled ?? this.isFlipPhoneEnabled,
+      isLockPhoneEnabled: isLockPhoneEnabled ?? this.isLockPhoneEnabled,
       isExitBlockingEnabled: isExitBlockingEnabled ?? this.isExitBlockingEnabled,
       blockedApps: blockedApps ?? this.blockedApps,
       timerMode: timerMode ?? this.timerMode,
@@ -108,6 +128,8 @@ class HomeState extends Equatable {
       currentSessionActualStartTime: clearCurrentSessionActualStartTime
           ? null
           : currentSessionActualStartTime ?? this.currentSessionActualStartTime,
+      hasDNDPermission: hasDNDPermission ?? this.hasDNDPermission,
+      hasAccessibilityPermission: hasAccessibilityPermission ?? this.hasAccessibilityPermission,
     );
   }
 
@@ -121,8 +143,11 @@ class HomeState extends Equatable {
     currentSession,
     totalSessions,
     isStrictModeEnabled,
+    isBlockNotificationsEnabled,
+    isBlockPhoneCallsEnabled,
     isAppBlockingEnabled,
     isFlipPhoneEnabled,
+    isLockPhoneEnabled,
     isExitBlockingEnabled,
     blockedApps,
     timerMode,
@@ -137,5 +162,7 @@ class HomeState extends Equatable {
     whiteNoiseVolume,
     isCountingUp,
     currentSessionActualStartTime, // <<< THÊM DÒNG NÀY
+    hasDNDPermission,
+    hasAccessibilityPermission,
   ];
 }

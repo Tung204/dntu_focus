@@ -1,6 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/material.dart';
-import 'package:moji_todo/core/utils/my_date_range.dart';
 import 'package:moji_todo/features/report/data/report_repository.dart';
 import 'package:moji_todo/features/report/domain/report_state.dart';
 import 'package:moji_todo/features/report/data/report_time_range.dart';
@@ -8,6 +6,7 @@ import 'package:moji_todo/features/tasks/data/models/project_model.dart';
 import 'package:moji_todo/features/tasks/data/models/task_model.dart';
 import 'package:moji_todo/features/tasks/data/models/project_tag_repository.dart';
 import 'package:moji_todo/features/tasks/data/task_repository.dart';
+import 'package:moji_todo/features/report/data/mock_data_generator.dart';
 
 import '../data/models/pomodoro_session_model.dart';
 
@@ -15,15 +14,29 @@ class ReportCubit extends Cubit<ReportState> {
   final ReportRepository _reportRepository;
   final ProjectTagRepository _projectTagRepository;
   final TaskRepository _taskRepository;
+  
+  // Flag để bật/tắt mock data cho testing
+  final bool useMockData;
+  final MockDataGenerator _mockDataGenerator = MockDataGenerator();
 
-  ReportCubit(this._reportRepository, this._projectTagRepository, this._taskRepository)
-      : super(const ReportState()) {
+  ReportCubit(
+    this._reportRepository,
+    this._projectTagRepository,
+    this._taskRepository, {
+    this.useMockData = true, // Mặc định bật mock data để test UI
+  }) : super(const ReportState()) {
     _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
     try {
       emit(state.copyWith(status: ReportStatus.loading));
+
+      // Nếu dùng mock data, load dữ liệu mẫu
+      if (useMockData) {
+        await _loadMockData();
+        return;
+      }
 
       // Sử dụng Future.wait với danh sách Future
       final results = await Future.wait([
@@ -106,6 +119,38 @@ class ReportCubit extends Cubit<ReportState> {
     }
   }
 
+  /// Load dữ liệu mẫu để test UI
+  Future<void> _loadMockData() async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final mockProjects = _mockDataGenerator.generateMockProjects();
+    final focusTimeStats = _mockDataGenerator.generateMockFocusTimeStats();
+    final tasksStats = _mockDataGenerator.generateMockTasksCompletedStats();
+
+    emit(state.copyWith(
+      status: ReportStatus.success,
+      focusTimeToday: focusTimeStats['today']!,
+      focusTimeThisWeek: focusTimeStats['thisWeek']!,
+      focusTimeThisTwoWeeks: focusTimeStats['thisTwoWeeks']!,
+      focusTimeThisMonth: focusTimeStats['thisMonth']!,
+      focusTimeThisYear: focusTimeStats['thisYear']!,
+      tasksCompletedToday: tasksStats['today']!,
+      tasksCompletedThisWeek: tasksStats['thisWeek']!,
+      tasksCompletedThisTwoWeeks: tasksStats['thisTwoWeeks']!,
+      tasksCompletedThisMonth: tasksStats['thisMonth']!,
+      tasksCompletedThisYear: tasksStats['thisYear']!,
+      projectTimeDistribution: _mockDataGenerator.generateMockProjectDistribution(projects: mockProjects),
+      taskFocusTime: {},
+      focusTimeChartData: _mockDataGenerator.generateMockFocusTimeChartData(days: 14, projects: mockProjects),
+      pomodoroHeatmapData: _mockDataGenerator.generateMockHeatmapData(days: 14, projects: mockProjects),
+      focusGoalMetDays: _mockDataGenerator.generateMockGoalMetDays(days: 60),
+      focusGoalProgress: _mockDataGenerator.generateMockFocusGoalProgress(days: 60),
+      allProjects: mockProjects,
+      allTasks: [],
+    ));
+  }
+
   // Các hàm thay đổi filter không thay đổi
   Future<void> changeProjectDistributionFilter(ReportDataFilter filter) async {
     try {
@@ -139,6 +184,62 @@ class ReportCubit extends Cubit<ReportState> {
         errorMessage: 'Failed to load chart data: ${e.toString()}',
       ));
     }
+  }
+
+  /// Thay đổi filter cho Pomodoro Records và load dữ liệu mới
+  Future<void> changePomodoroRecordsFilter(ReportDataFilter filter) async {
+    try {
+      emit(state.copyWith(pomodoroRecordsFilter: filter));
+      
+      // Nếu dùng mock data, generate lại dữ liệu với số ngày phù hợp
+      if (useMockData) {
+        final days = _getDaysFromFilter(filter);
+        final mockProjects = state.allProjects.isNotEmpty 
+            ? state.allProjects 
+            : _mockDataGenerator.generateMockProjects();
+        final newHeatmapData = _mockDataGenerator.generateMockHeatmapData(
+          days: days,
+          projects: mockProjects,
+        );
+        emit(state.copyWith(
+          pomodoroHeatmapData: newHeatmapData,
+        ));
+        return;
+      }
+      
+      // Load từ repository với range tương ứng
+      final range = _getRangeFromFilter(filter);
+      final newData = await _reportRepository.getPomodoroRecordsHeatmapData(range: range);
+      emit(state.copyWith(
+        pomodoroHeatmapData: newData,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ReportStatus.failure,
+        errorMessage: 'Failed to load pomodoro records: ${e.toString()}',
+      ));
+    }
+  }
+
+  /// Lấy số ngày từ filter để hiển thị
+  int _getDaysFromFilter(ReportDataFilter filter) {
+    switch (filter) {
+      case ReportDataFilter.daily:
+        return 1;
+      case ReportDataFilter.weekly:
+        return 7;
+      case ReportDataFilter.biweekly:
+        return 14;
+      case ReportDataFilter.monthly:
+        return 30;
+      case ReportDataFilter.yearly:
+        return 365;
+    }
+  }
+
+  /// Thay đổi filter cho Focus Goal
+  void changeFocusGoalFilter(ReportDataFilter filter) {
+    emit(state.copyWith(focusGoalFilter: filter));
   }
 
   ReportTimeRange _getRangeFromFilter(ReportDataFilter filter) {

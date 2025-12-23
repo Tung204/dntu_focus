@@ -113,8 +113,8 @@ class TaskItemCard extends StatelessWidget {
                               shape: const CircleBorder(),
                               activeColor: Colors.green,
                               checkColor: Theme.of(context).colorScheme.onPrimary,
-                              side: MaterialStateBorderSide.resolveWith(
-                                    (states) => BorderSide(color: states.contains(MaterialState.selected) ? Colors.green : Colors.red, width: 1.5),
+                              side: WidgetStateBorderSide.resolveWith(
+                                    (states) => BorderSide(color: states.contains(WidgetState.selected) ? Colors.green : Colors.red, width: 1.5),
                               ),
                               visualDensity: VisualDensity.compact,
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

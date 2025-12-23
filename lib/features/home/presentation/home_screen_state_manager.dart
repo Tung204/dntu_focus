@@ -16,13 +16,17 @@ class HomeScreenStateManager {
   final MethodChannel _serviceChannel = const MethodChannel('com.example.moji_todo/app_block_service');
   late final TimerStateHandler _timerStateHandler;
   late final PermissionHandler permissionHandler;
+  late final UnifiedNotificationService _notificationService; // Instance variable for notification service
   bool _isActionPending = false; // Giữ lại để tránh spam action
+  bool _hasShownExitBlockingNotification = false; // Track if we've shown the notification
+  AppLifecycleState? _lastLifecycleState; // Track last lifecycle state
 
   HomeScreenStateManager({
     required this.context,
     required this.sharedPreferences,
     required this.onShowTaskBottomSheet,
   }) {
+    _notificationService = UnifiedNotificationService(); // Initialize once and reuse
     _timerStateHandler = TimerStateHandler(
       homeCubit: context.read<HomeCubit>(),
       notificationChannel: _channel,
@@ -31,12 +35,16 @@ class HomeScreenStateManager {
     permissionHandler = PermissionHandler(
       context: context,
       notificationChannel: _channel,
-      notificationService: UnifiedNotificationService(), // UnifiedNotificationService() cần được khởi tạo hoặc truyền vào
+      notificationService: _notificationService, // Use same instance
       onPermissionStateChanged: _updatePermissionState,
     );
   }
 
   Future<void> init() async {
+    // Initialize notification service first
+    await _notificationService.init();
+    print('UnifiedNotificationService initialized in HomeScreenStateManager');
+    
     // Luôn khôi phục trạng thái timer từ service khi khởi động app
     // TimerStateHandler sẽ gọi native service để lấy trạng thái và cập nhật HomeCubit
     await _restoreTimerState();
@@ -78,13 +86,82 @@ class HomeScreenStateManager {
   }
 
   Future<void> handleAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.paused) {
-      print('App lifecycle: paused (TimerService manages state persistence).');
+    print('🔄 App lifecycle changed: $_lastLifecycleState → $state');
+    
+    final homeCubit = context.read<HomeCubit>();
+    final homeState = homeCubit.state;
+    
+    // Handle different lifecycle states
+    if (state == AppLifecycleState.inactive) {
+      print('📱 App lifecycle: INACTIVE');
+      _lastLifecycleState = state;
+      
+    } else if (state == AppLifecycleState.paused) {
+      print('📱 App lifecycle: PAUSED (TimerService manages state persistence).');
+      print('🔍 DEBUG: Exit Blocking status:');
+      print('   - isExitBlockingEnabled: ${homeState.isExitBlockingEnabled}');
+      print('   - isTimerRunning: ${homeState.isTimerRunning}');
+      print('   - isPaused: ${homeState.isPaused}');
+      print('   - _hasShownExitBlockingNotification: $_hasShownExitBlockingNotification');
+      
+      // NEW: Check Exit Blocking - Show notification if user tries to exit during focus session
+      if (homeState.isExitBlockingEnabled &&
+          homeState.isTimerRunning &&
+          !homeState.isPaused &&
+          !_hasShownExitBlockingNotification) {
+        
+        print('✅ Exit Blocking active - showing notification and vibrating phone');
+        
+        try {
+          // Show Exit Blocking notification (includes vibration)
+          await _notificationService.showExitBlockingNotification();
+          _hasShownExitBlockingNotification = true;
+          print('✅ Exit Blocking notification displayed successfully');
+        } catch (e) {
+          print('❌ Error showing Exit Blocking notification: $e');
+          print('Stack trace: ${StackTrace.current}');
+        }
+      } else {
+        print('ℹ️ Exit Blocking conditions not met - no notification shown');
+        if (!homeState.isExitBlockingEnabled) print('   Reason: Exit Blocking not enabled');
+        if (!homeState.isTimerRunning) print('   Reason: Timer not running');
+        if (homeState.isPaused) print('   Reason: Timer is paused');
+        if (_hasShownExitBlockingNotification) print('   Reason: Notification already shown');
+      }
+      
+      _lastLifecycleState = state;
+      
     } else if (state == AppLifecycleState.resumed) {
-      print('App lifecycle: resumed. Requesting fresh timer state from TimerService.');
+      print('📱 App lifecycle: RESUMED. Requesting fresh timer state from TimerService.');
+      
+      // Reset notification flag
+      _hasShownExitBlockingNotification = false;
+      
+      // NEW: Cancel Exit Blocking notification when app resumes
+      try {
+        await _notificationService.cancelExitBlockingNotification();
+        print('✅ Cancelled Exit Blocking notification on app resume');
+      } catch (e) {
+        print('❌ Error cancelling Exit Blocking notification: $e');
+      }
+      
       // Khi app resume, luôn yêu cầu trạng thái mới nhất từ TimerService.
       // TimerService sẽ emit qua EventChannel, và HomeCubit sẽ lắng nghe và cập nhật UI.
       await _restoreTimerState();
+      
+      // NEW: Refresh permission states when app resumes (user might have granted permissions)
+      try {
+        await homeCubit.refreshPermissionStates();
+        print('✅ Refreshed permission states after app resume.');
+      } catch (e) {
+        print('❌ Error refreshing permission states: $e');
+      }
+      
+      _lastLifecycleState = state;
+      
+    } else if (state == AppLifecycleState.detached || state == AppLifecycleState.hidden) {
+      print('📱 App lifecycle: ${state.name.toUpperCase()}');
+      _lastLifecycleState = state;
     }
   }
 

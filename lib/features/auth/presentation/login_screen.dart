@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../routes/app_routes.dart';
 import '../domain/auth_cubit.dart';
+import '../../../core/themes/design_tokens.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -27,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: FigmaColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -88,20 +90,19 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         Image.asset(
-          'assets/images/logo_moji.png',
-          height: 100,
-          width: 100,
+          'assets/images/logo_inapp.png',
+          height: FigmaSpacing.logoSize,
+          width: FigmaSpacing.logoSize,
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: FigmaSpacing.lg),
         Text(
-          'DNTU-Focus',
-          style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          'Moji Focus',
+          style: FigmaTextStyles.h2,
         ),
       ],
     );
   }
 
-  // ===== THAY ĐỔI MÀU NỀN Ở ĐÂY =====
   Widget _buildEmailField(bool isLoading) {
     return TextField(
       controller: _emailController,
@@ -109,32 +110,48 @@ class _LoginScreenState extends State<LoginScreen> {
         hintText: 'Email',
         prefixIcon: const Icon(Icons.email_outlined),
         filled: true,
-        fillColor: Colors.grey.shade300, // <-- MÀU ĐẬM HƠN
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
+      style: FigmaTextStyles.input,
       keyboardType: TextInputType.emailAddress,
       enabled: !isLoading,
     );
   }
 
-  // ===== VÀ Ở ĐÂY =====
   Widget _buildPasswordField(bool isLoading) {
     return TextField(
       controller: _passwordController,
       decoration: InputDecoration(
         hintText: 'Password',
         prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: FigmaColors.textSecondary,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ),
         filled: true,
-        fillColor: Colors.grey.shade300, // <-- MÀU ĐẬM HƠN
+        fillColor: FigmaColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
           borderSide: BorderSide.none,
         ),
+        contentPadding: FigmaSpacing.inputPadding,
+        hintStyle: FigmaTextStyles.hint,
       ),
-      obscureText: true,
+      style: FigmaTextStyles.input,
+      obscureText: _obscurePassword,
       enabled: !isLoading,
     );
   }
@@ -144,7 +161,12 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: isLoading ? null : () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
-        child: const Text('Forgot Password?'),
+        child: Text(
+          'Forgot Password?',
+          style: FigmaTextStyles.labelMedium.copyWith(
+            color: FigmaColors.primary,
+          ),
+        ),
       ),
     );
   }
@@ -158,26 +180,32 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       },
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        backgroundColor: FigmaColors.primary,
+        foregroundColor: FigmaColors.textOnPrimary,
+        minimumSize: const Size(double.infinity, FigmaSpacing.buttonHeight),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
         ),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
+        elevation: FigmaElevation.sm,
       ),
-      child: const Text('SIGN IN', style: TextStyle(fontWeight: FontWeight.bold)),
+      child: Text('SIGN IN', style: FigmaTextStyles.labelLarge),
     );
   }
 
   Widget _buildSocialLoginSeparator(TextTheme textTheme) {
     return Row(
       children: [
-        const Expanded(child: Divider()),
+        const Expanded(child: Divider(color: FigmaColors.divider)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OR', style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
+          padding: EdgeInsets.symmetric(horizontal: FigmaSpacing.md),
+          child: Text(
+            'OR',
+            style: FigmaTextStyles.bodySmall.copyWith(
+              color: FigmaColors.textSecondary,
+            ),
+          ),
         ),
-        const Expanded(child: Divider()),
+        const Expanded(child: Divider(color: FigmaColors.divider)),
       ],
     );
   }
@@ -186,12 +214,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return OutlinedButton.icon(
       onPressed: isLoading ? null : () => context.read<AuthCubit>().signInWithGoogle(),
       icon: const Icon(Icons.g_mobiledata, size: 28.0),
-      label: const Text('Sign In with Google'),
+      label: Text('Sign In with Google', style: FigmaTextStyles.labelMedium),
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.black87,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: Colors.grey.shade300),
+        foregroundColor: FigmaColors.textPrimary,
+        minimumSize: const Size(double.infinity, FigmaSpacing.buttonHeight),
+        side: const BorderSide(
+          color: FigmaColors.surface,
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(FigmaSpacing.radiusMd),
+        ),
       ),
     );
   }
@@ -200,14 +233,19 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Don't have an account?", style: textTheme.bodyMedium),
+        Text(
+          "Don't have an account?",
+          style: FigmaTextStyles.bodyMedium.copyWith(
+            color: FigmaColors.textSecondary,
+          ),
+        ),
         TextButton(
           onPressed: isLoading ? null : () => Navigator.pushNamed(context, AppRoutes.register),
           child: Text(
             'Sign Up',
-            style: TextStyle(
+            style: FigmaTextStyles.labelMedium.copyWith(
+              color: FigmaColors.primary,
               fontWeight: FontWeight.bold,
-              color: colorScheme.primary,
             ),
           ),
         ),

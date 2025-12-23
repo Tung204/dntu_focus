@@ -33,8 +33,8 @@ class TaskCubit extends Cubit<TaskState> {
     }
     try {
       final tasks = await taskRepository.getTasks();
-      final projects = await projectTagRepository.getProjects();
-      final tags = await projectTagRepository.getTags();
+      final projects = projectTagRepository.getProjects();
+      final tags = projectTagRepository.getTags();
 
       emit(state.copyWith(
         tasks: tasks,
@@ -56,7 +56,25 @@ class TaskCubit extends Cubit<TaskState> {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
 
-    final category = await _geminiService.classifyTask(task.title ?? '');
+    String category = 'Planned'; // Mặc định
+    
+    try {
+      print('Calling Gemini API to classify task: ${task.title}');
+      // Thêm timeout cho Gemini API call
+      category = await _geminiService.classifyTask(task.title ?? '')
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              print('Gemini API timeout, using default category: Planned');
+              return 'Planned';
+            },
+          );
+      print('Task classified as: $category');
+    } catch (e) {
+      print('Error calling Gemini API: $e, using default category: Planned');
+      category = 'Planned';
+    }
+    
     // Đảm bảo ID được tạo nếu chưa có (Task model đã xử lý việc này)
     final taskToAdd = task.copyWith(
       category: category,

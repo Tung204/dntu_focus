@@ -235,9 +235,9 @@ class CompletedTasksScreen extends StatelessWidget {
                                         },
                                         shape: const CircleBorder(),
                                         activeColor: Colors.green,
-                                        checkColor: Theme.of(context).checkboxTheme.checkColor?.resolve({MaterialState.selected}),
-                                        side: MaterialStateBorderSide.resolveWith(
-                                              (states) => BorderSide(color: states.contains(MaterialState.selected) ? Colors.green : Colors.red),
+                                        checkColor: Theme.of(context).checkboxTheme.checkColor?.resolve({WidgetState.selected}),
+                                        side: WidgetStateBorderSide.resolveWith(
+                                              (states) => BorderSide(color: states.contains(WidgetState.selected) ? Colors.green : Colors.red),
                                         ),
                                       ),
                                     ),
