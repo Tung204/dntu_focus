@@ -7,7 +7,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/sizes.dart';
 import '../../../../core/constants/strings.dart';
-
+/// A widget that displays a White Noise menu allowing users to select and configure white noise settings.
 class WhiteNoiseMenu extends StatelessWidget {
   const WhiteNoiseMenu({super.key});
 
