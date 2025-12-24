@@ -33,6 +33,10 @@ class _PriorityPickerState extends State<PriorityPicker> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: BoxConstraints(
+        minHeight: 300,
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: SingleChildScrollView(
         child: Column(
@@ -56,18 +60,23 @@ class _PriorityPickerState extends State<PriorityPicker> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                SizedBox(
+                  width: 80,
+                  height: 36,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
+                    child: const Text('OK'),
                   ),
-                  child: const Text('OK'),
                 ),
               ],
             ),

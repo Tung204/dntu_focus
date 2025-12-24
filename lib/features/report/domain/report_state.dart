@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
 import 'package:moji_todo/features/tasks/data/models/project_model.dart';
 import 'package:moji_todo/features/tasks/data/models/task_model.dart';
 import 'package:moji_todo/features/report/data/models/pomodoro_session_model.dart';
@@ -25,10 +24,13 @@ class ReportState extends Equatable {
   final Map<DateTime, Map<String?, Duration>> focusTimeChartData;
   final Map<DateTime, List<PomodoroSessionRecordModel>> pomodoroHeatmapData;
   final Set<DateTime> focusGoalMetDays;
+  final Map<DateTime, double> focusGoalProgress; // Progress 0.0-1.0 for each day
   final List<Project> allProjects;
   final List<Task> allTasks;
   final ReportDataFilter projectDistributionFilter;
   final ReportDataFilter focusTimeChartFilter;
+  final ReportDataFilter pomodoroRecordsFilter;
+  final ReportDataFilter focusGoalFilter;
 
   const ReportState({
     this.status = ReportStatus.initial,
@@ -48,10 +50,13 @@ class ReportState extends Equatable {
     this.focusTimeChartData = const {},
     this.pomodoroHeatmapData = const {},
     this.focusGoalMetDays = const {},
+    this.focusGoalProgress = const {},
     this.allProjects = const [],
     this.allTasks = const [],
     this.projectDistributionFilter = ReportDataFilter.weekly,
     this.focusTimeChartFilter = ReportDataFilter.biweekly,
+    this.pomodoroRecordsFilter = ReportDataFilter.weekly,
+    this.focusGoalFilter = ReportDataFilter.monthly,
   });
 
   ReportState copyWith({
@@ -72,10 +77,13 @@ class ReportState extends Equatable {
     Map<DateTime, Map<String?, Duration>>? focusTimeChartData,
     Map<DateTime, List<PomodoroSessionRecordModel>>? pomodoroHeatmapData,
     Set<DateTime>? focusGoalMetDays,
+    Map<DateTime, double>? focusGoalProgress,
     List<Project>? allProjects,
     List<Task>? allTasks,
     ReportDataFilter? projectDistributionFilter,
     ReportDataFilter? focusTimeChartFilter,
+    ReportDataFilter? pomodoroRecordsFilter,
+    ReportDataFilter? focusGoalFilter,
   }) {
     return ReportState(
       status: status ?? this.status,
@@ -95,10 +103,13 @@ class ReportState extends Equatable {
       focusTimeChartData: focusTimeChartData ?? this.focusTimeChartData,
       pomodoroHeatmapData: pomodoroHeatmapData ?? this.pomodoroHeatmapData,
       focusGoalMetDays: focusGoalMetDays ?? this.focusGoalMetDays,
+      focusGoalProgress: focusGoalProgress ?? this.focusGoalProgress,
       allProjects: allProjects ?? this.allProjects,
       allTasks: allTasks ?? this.allTasks,
       projectDistributionFilter: projectDistributionFilter ?? this.projectDistributionFilter,
       focusTimeChartFilter: focusTimeChartFilter ?? this.focusTimeChartFilter,
+      pomodoroRecordsFilter: pomodoroRecordsFilter ?? this.pomodoroRecordsFilter,
+      focusGoalFilter: focusGoalFilter ?? this.focusGoalFilter,
     );
   }
 
@@ -121,9 +132,12 @@ class ReportState extends Equatable {
     focusTimeChartData,
     pomodoroHeatmapData,
     focusGoalMetDays,
+    focusGoalProgress,
     allProjects,
     allTasks,
     projectDistributionFilter,
     focusTimeChartFilter,
+    pomodoroRecordsFilter,
+    focusGoalFilter,
   ];
 }

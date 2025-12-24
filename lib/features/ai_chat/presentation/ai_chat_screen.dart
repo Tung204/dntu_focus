@@ -38,7 +38,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (!_showFirstTimeGuide) {
       _messages.add({
         'role': 'assistant',
-        'content': 'Chào bạn! Mình là trợ lý AI DNTU-Focus. Bạn có thể trò chuyện với mình như:\n\n• "Làm bài tập toán 25 phút 5 phút nghỉ"\n• "Ngày mai đi chợ lúc 6 sáng"\n• "Bắt đầu Pomodoro 15 phút"\n\nMình sẽ giúp bạn tạo task và bắt đầu Pomodoro ngay!',
+        'content': 'Chào bạn! Mình là trợ lý AI Moji Focus. Bạn có thể trò chuyện với mình như:\n\n• "Làm bài tập toán 25 phút 5 phút nghỉ"\n• "Ngày mai đi chợ lúc 6 sáng"\n• "Bắt đầu Pomodoro 15 phút"\n\nMình sẽ giúp bạn tạo task và bắt đầu Pomodoro ngay!',
       });
     }
   }

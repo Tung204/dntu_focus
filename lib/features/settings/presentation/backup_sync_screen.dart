@@ -1,13 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
-import 'package:http/http.dart' as http;
 import '../domain/settings_cubit.dart';
 import '../../../core/services/backup_service.dart';
 import '../../../core/widgets/custom_app_bar.dart';
-import 'package:moji_todo/features/tasks/data/models/task_model.dart';
 
 class BackupSyncScreen extends StatelessWidget {
   final BackupService backupService;

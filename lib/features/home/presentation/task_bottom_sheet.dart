@@ -24,67 +24,76 @@ class TaskBottomSheet {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setBottomSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return GestureDetector(
+              onTap: () {
+                // Ẩn bàn phím khi ấn bên ngoài TextField
+                FocusScope.of(context).unfocus();
+              },
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.6,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Select Task',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Select Task',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
+                                onPressed: () {
+                                  Navigator.pushNamed(context, AppRoutes.tasks);
+                                },
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
-                            onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.tasks);
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search task...',
+                              hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                              filled: true,
+                              fillColor: Theme.of(context).colorScheme.surface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            autofocus: false,
+                            onChanged: (value) {
+                              setBottomSheetState(() {
+                                searchQuery = value;
+                              });
                             },
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search task...',
-                          hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Theme.of(context).iconTheme.color,
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).colorScheme.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        autofocus: true,
-                        onChanged: (value) {
-                          setBottomSheetState(() {
-                            searchQuery = value;
-                          });
-                        },
-                      ),
                       const SizedBox(height: 20),
                       BlocBuilder<TaskCubit, TaskState>(
                         builder: (context, state) {
@@ -141,8 +150,10 @@ class TaskBottomSheet {
                           );
                         },
                       ),
-                      const SizedBox(height: 16),
-                    ],
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

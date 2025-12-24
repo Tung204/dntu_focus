@@ -73,8 +73,9 @@ class TaskListScreen extends StatelessWidget {
           final categorizedTasks = context.read<TaskCubit>().getCategorizedTasks();
           tasksToDisplay = categorizedTasks[category] ?? [];
           // Cập nhật screenTitle cho các category thông thường
-          if (category == 'Today') screenTitle = 'Hôm nay';
-          else if (category == 'Tomorrow') screenTitle = 'Ngày mai';
+          if (category == 'Today') {
+            screenTitle = 'Hôm nay';
+          } else if (category == 'Tomorrow') screenTitle = 'Ngày mai';
           else if (category == 'This Week') screenTitle = 'Tuần này';
           else if (category == 'Planned') screenTitle = 'Đã lên kế hoạch';
           // Giữ nguyên `category` làm tiêu đề nếu không khớp các trường hợp trên

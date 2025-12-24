@@ -158,7 +158,7 @@ class WhiteNoiseMenu extends StatelessWidget {
                                       ),
                                     ),
                                     child: DropdownButtonFormField<String>(
-                                      value: selectedWhiteNoise,
+                                      initialValue: selectedWhiteNoise,
                                       decoration: InputDecoration(
                                         labelText: 'Chọn âm thanh',
                                         labelStyle: GoogleFonts.inter(

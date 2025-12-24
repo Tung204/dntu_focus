@@ -55,7 +55,7 @@ def add_entities_table(document: Document, rows: list[dict]) -> None:
 def build_document() -> Document:
     document = Document()
 
-    add_title(document, "DNTU Focus - Mô tả bài toán và phân tích")
+    add_title(document, "Moji Focus - Mô tả bài toán và phân tích")
     add_paragraph(
         document,
         f"Tạo lúc: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
@@ -65,7 +65,7 @@ def build_document() -> Document:
     add_heading(document, "1. Tổng quan", level=1)
     add_paragraph(
         document,
-        "DNTU Focus là ứng dụng quản lý công việc cá nhân kết hợp kỹ thuật Pomodoro, giúp người dùng tập trung, phân rã công việc và theo dõi tiến độ."
+        "Moji Focus là ứng dụng quản lý công việc cá nhân kết hợp kỹ thuật Pomodoro, giúp người dùng tập trung, phân rã công việc và theo dõi tiến độ."
     )
 
     # 2) Mục tiêu & Phạm vi

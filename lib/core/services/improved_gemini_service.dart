@@ -9,7 +9,7 @@ import 'cache_service.dart';
 /// Service cải tiến cho Gemini với caching, error handling tốt hơn,
 /// và nâng cao xử lý ngôn ngữ tự nhiên.
 class ImprovedGeminiService {
-  static const String _defaultModelName = 'gemini-1.5-flash';
+  static const String _defaultModelName = 'gemini-2.5-flash';
   static const Duration _cacheDuration = Duration(minutes: 30);
   
   late final GenerativeModel _model;
@@ -17,7 +17,7 @@ class ImprovedGeminiService {
   
   // System prompt mạnh mẽ hơn cho trợ lý quản lý thời gian
   static const String _systemPrompt = '''
-Bạn là trợ lý AI DNTU-Focus - một trợ lý thông minh chuyên về quản lý thời gian và năng suất làm việc. 
+Bạn là trợ lý AI Moji Focus - một trợ lý thông minh chuyên về quản lý thời gian và năng suất làm việc.
 Nhiệm vụ chính của bạn là giúp người dùng tạo task, lên lịch, bắt đầu Pomodoro và quản lý thời gian hiệu quả.
 
 # Tính cách:

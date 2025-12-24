@@ -3,12 +3,13 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 
 class UnifiedNotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
   static const int TIMER_NOTIFICATION_ID = 100;
   static const int SESSION_END_NOTIFICATION_ID = 101; // ID mới cho thông báo kết thúc phiên
+  static const int EXIT_BLOCKING_NOTIFICATION_ID = 102; // ID cho thông báo Exit Blocking
   static const MethodChannel _channel = MethodChannel('com.example.moji_todo/notification');
 
   Future<void> init() async {
@@ -19,6 +20,19 @@ class UnifiedNotificationService {
         settings,
         onDidReceiveNotificationResponse: (NotificationResponse response) async {
           print('Notification tapped: type=${response.notificationResponseType}, payload=${response.payload}, actionId=${response.actionId}');
+          
+          // Handle Exit Blocking notification tap
+          if (response.payload == 'RETURN_TO_FOCUS') {
+            print('User tapped Exit Blocking notification - opening app');
+            await cancelExitBlockingNotification();
+            await _channel.invokeMethod('handleNotificationIntent', {
+              'action': 'com.example.moji_todo.OPEN_APP',
+              'fromNotification': true,
+              'Flutter_notification_payload': 'RETURN_TO_FOCUS',
+            });
+            return;
+          }
+          
           if (response.actionId != null) {
             print('Processing notification action: actionId=${response.actionId}, payload=${response.payload}');
             try {
@@ -203,6 +217,54 @@ class UnifiedNotificationService {
       print('Scheduled notification: title=$title, scheduledTime=$scheduledTime');
     } catch (e) {
       print('Error scheduling notification: $e');
+    }
+  }
+
+  /// Show Exit Blocking notification when user tries to exit during focus session
+  Future<void> showExitBlockingNotification() async {
+    try {
+      final androidDetails = AndroidNotificationDetails(
+        'exit_blocking_channel',
+        'Focus Mode Alert',
+        channelDescription: 'Alert when you try to exit during focus session',
+        importance: Importance.max,
+        priority: Priority.high,
+        ongoing: true, // Persistent notification - không thể swipe dismiss
+        autoCancel: false, // Không tự động ẩn khi tap
+        sound: RawResourceAndroidNotificationSound('bell'),
+        playSound: true,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 500, 200, 500]), // Rung 2 lần
+        visibility: NotificationVisibility.public,
+        category: AndroidNotificationCategory.alarm,
+        styleInformation: BigTextStyleInformation(
+          'Nhấn để quay lại ứng dụng và tiếp tục phiên tập trung của bạn',
+        ),
+      );
+
+      final details = NotificationDetails(android: androidDetails);
+
+      await _notificationsPlugin.show(
+        EXIT_BLOCKING_NOTIFICATION_ID,
+        '🔒 Bạn đang trong phiên tập trung!',
+        'Nhấn để quay lại ứng dụng và tiếp tục',
+        details,
+        payload: 'RETURN_TO_FOCUS',
+      );
+      
+      print('Exit Blocking notification shown successfully');
+    } catch (e) {
+      print('Error showing Exit Blocking notification: $e');
+    }
+  }
+
+  /// Cancel Exit Blocking notification
+  Future<void> cancelExitBlockingNotification() async {
+    try {
+      await _notificationsPlugin.cancel(EXIT_BLOCKING_NOTIFICATION_ID);
+      print('Exit Blocking notification cancelled');
+    } catch (e) {
+      print('Error cancelling Exit Blocking notification: $e');
     }
   }
 }

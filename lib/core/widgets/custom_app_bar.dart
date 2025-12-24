@@ -38,7 +38,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ],
           ).createShader(bounds),
           child: Text(
-            'DNTU-Focus',
+            'Moji Focus',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.bold,

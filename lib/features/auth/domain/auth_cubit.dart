@@ -7,13 +7,13 @@ import 'package:hive/hive.dart';
 import 'package:meta/meta.dart';
 
 // Đảm bảo các đường dẫn import là chính xác với cấu trúc thư mục của bạn
-import '../../../../core/services/backup_service.dart';
-import '../../tasks/data/models/project_model.dart';
-import '../../tasks/data/models/project_tag_repository.dart';
-import '../../tasks/data/models/tag_model.dart';
-import '../../tasks/data/models/task_model.dart';
-import '../../tasks/data/task_repository.dart';
-import '../data/auth_repository.dart';
+import 'package:moji_todo/core/services/backup_service.dart';
+import 'package:moji_todo/features/tasks/data/models/project_model.dart';
+import 'package:moji_todo/features/tasks/data/models/project_tag_repository.dart';
+import 'package:moji_todo/features/tasks/data/models/tag_model.dart';
+import 'package:moji_todo/features/tasks/data/models/task_model.dart';
+import 'package:moji_todo/features/tasks/data/task_repository.dart';
+import 'package:moji_todo/features/auth/data/auth_repository.dart';
 
 part 'auth_state.dart';
 

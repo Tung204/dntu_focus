@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://github.com/Tung204/dntu_focus">
-    <img src="assets/images/logo_moji.png" width="120" alt="DNTU-Focus logo"/>
+    <img src="assets/images/logo_moji.png" width="120" alt="Moji Focus logo"/>
   </a>
 </p>
 
-<h1 align="center">DNTU-Focus</h1>
+<h1 align="center">Moji Focus</h1>
 
 <p align="center">
   Ứng dụng Pomodoro hỗ trợ học tập, tích hợp AI ChatBot và quản lý công việc thông minh.
@@ -30,7 +30,7 @@
 
 ## 📝 Giới thiệu
 
-**[DNTU-Focus](https://github.com/Tung204/dntu_focus)** là ứng dụng di động được phát triển bằng [Flutter](https://flutter.dev/), sử dụng kỹ thuật [Pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) và tích hợp ChatBot AI để nâng cao hiệu suất học tập. Ứng dụng được phát triển bởi sinh viên [Đại học Công nghệ Đồng Nai (DNTU)](https://dntu.edu.vn/), hỗ trợ quản lý công việc, lịch học, và tạo môi trường học tập tập trung.
+**[Moji Focus](https://github.com/Tung204/dntu_focus)** là ứng dụng di động được phát triển bằng [Flutter](https://flutter.dev/), sử dụng kỹ thuật [Pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) và tích hợp ChatBot AI để nâng cao hiệu suất học tập. Ứng dụng được phát triển bởi sinh viên [Đại học Công nghệ Đồng Nai (DNTU)](https://dntu.edu.vn/), hỗ trợ quản lý công việc, lịch học, và tạo môi trường học tập tập trung.
 
 📱 Nếu bạn thấy dự án hữu ích, hãy **⭐ Star**, **👍 Like**, hoặc **👏 Share** nhé!
 
@@ -83,7 +83,7 @@ Sắp xếp công việc với dự án và thẻ, đồng bộ qua Firestore.
 
 ## Tổng quan
 
-**DNTU-Focus** là ứng dụng năng suất giúp sinh viên quản lý thời gian và công việc hiệu quả. Được xây dựng bằng [Flutter](https://flutter.dev/), ứng dụng áp dụng kỹ thuật [Pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) để tăng cường tập trung, tích hợp các tính năng như Chế độ nghiêm ngặt, Âm thanh nền, và ChatBot AI sử dụng [Gemini Service](https://ai.google.dev/). Dữ liệu được đồng bộ với [Firebase Firestore](https://firebase.google.com/products/firestore) và lưu cục bộ bằng [Hive](https://pub.dev/packages/hive), đảm bảo truy cập cả khi online và offline.
+**Moji Focus** là ứng dụng năng suất giúp sinh viên quản lý thời gian và công việc hiệu quả. Được xây dựng bằng [Flutter](https://flutter.dev/), ứng dụng áp dụng kỹ thuật [Pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) để tăng cường tập trung, tích hợp các tính năng như Chế độ nghiêm ngặt, Âm thanh nền, và ChatBot AI sử dụng [Gemini Service](https://ai.google.dev/). Dữ liệu được đồng bộ với [Firebase Firestore](https://firebase.google.com/products/firestore) và lưu cục bộ bằng [Hive](https://pub.dev/packages/hive), đảm bảo truy cập cả khi online và offline.
 
 ## Tính năng
 
@@ -401,7 +401,7 @@ lib/
 
 ## Đóng góp
 
-Chúng tôi hoan nghênh mọi đóng góp để cải thiện DNTU-Focus! Để đóng góp:
+Chúng tôi hoan nghênh mọi đóng góp để cải thiện Moji Focus! Để đóng góp:
 
 1. Fork kho mã nguồn [🔗](https://github.com/Tung204/dntu_focus).
 2. Tạo nhánh tính năng:

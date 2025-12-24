@@ -61,6 +61,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       tagBox: Hive.box('tags'),
     );
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth < 360 ? 22.0 : 26.0;
+    final titleSize = screenWidth < 360 ? 18.0 : 20.0;
+
     return BlocBuilder<TaskCubit, TaskState>(
       builder: (context, state) {
         print('Padding: ${MediaQuery.of(context).padding}');
@@ -76,29 +80,44 @@ class _CalendarScreenState extends State<CalendarScreen> {
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               elevation: 0,
               automaticallyImplyLeading: false,
-              title: Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Text(
-                  'Lịch',
-                  style: Theme.of(context).textTheme.titleLarge,
+              leadingWidth: screenWidth * 0.15,
+              leading: Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.05),
+                child: Icon(
+                  Icons.notifications_outlined,
+                  color: Theme.of(context).iconTheme.color,
+                  size: iconSize,
+                ),
+              ),
+              title: Text(
+                'Lịch',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                  fontSize: titleSize,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
               centerTitle: true,
               actions: [
-                IconButton(
-                  icon: Icon(Icons.add, color: Theme.of(context).iconTheme.color),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.8,
-                      ),
-                      builder: (context) => AddTaskBottomSheet(
-                        repository: projectTagRepository,
-                      ),
-                    );
-                  },
+                Padding(
+                  padding: EdgeInsets.only(right: screenWidth * 0.05),
+                  child: IconButton(
+                    icon: Icon(Icons.add, size: iconSize),
+                    color: Theme.of(context).iconTheme.color,
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.8,
+                        ),
+                        builder: (context) => AddTaskBottomSheet(
+                          repository: projectTagRepository,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
