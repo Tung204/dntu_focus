@@ -1,8 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_generative_ai/google_generative_ai.dart'; // Assuming this is used for classifyTask
-import '../../../core/services/gemini_service.dart'; // Assuming this is your Gemini service
+import 'package:google_generative_ai/google_generative_ai.dart';
+import '../../../core/services/gemini_service.dart';
+import '../../../core/constants/app_strings.dart';
 import '../data/models/project_model.dart';
 import '../data/models/tag_model.dart';
 import '../data/models/task_model.dart';
@@ -14,7 +15,7 @@ part 'task_state.dart';
 class TaskCubit extends Cubit<TaskState> {
   final TaskRepository taskRepository;
   final ProjectTagRepository projectTagRepository;
-  final GeminiService _geminiService = GeminiService(); // If you use it
+  final GeminiService _geminiService = GeminiService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   TaskCubit({
@@ -54,9 +55,9 @@ class TaskCubit extends Cubit<TaskState> {
 
   Future<void> addTask(Task task) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
-    String category = 'Planned'; // Mặc định
+    String category = 'Planned';
     
     try {
       print('Calling Gemini API to classify task: ${task.title}');
@@ -75,7 +76,6 @@ class TaskCubit extends Cubit<TaskState> {
       category = 'Planned';
     }
     
-    // Đảm bảo ID được tạo nếu chưa có (Task model đã xử lý việc này)
     final taskToAdd = task.copyWith(
       category: category,
       userId: user.uid,
@@ -89,10 +89,9 @@ class TaskCubit extends Cubit<TaskState> {
     await loadInitialData();
   }
 
-  // Sửa: Bỏ loadInitialData() ở cuối, sẽ được gọi bởi hàm điều phối
   Future<void> updateTasksOnProjectDeletion(String projectIdToDelete) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
     final tasksToUpdate = List<Task>.from(state.tasks)
         .where((task) => task.projectId == projectIdToDelete && task.userId == user.uid)
@@ -101,14 +100,12 @@ class TaskCubit extends Cubit<TaskState> {
     for (var task in tasksToUpdate) {
       await taskRepository.updateTask(task.copyWith(projectId: null));
     }
-    // await loadInitialData(); // Bỏ dòng này
     print("Tasks updated for project deletion: $projectIdToDelete");
   }
 
-  // Sửa: Bỏ loadInitialData() ở cuối, sẽ được gọi bởi hàm điều phối
   Future<void> updateTasksOnTagDeletion(String tagIdToDelete) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
     final tasksToUpdate = List<Task>.from(state.tasks)
         .where((task) => task.tagIds?.contains(tagIdToDelete) == true && task.userId == user.uid)
@@ -118,67 +115,54 @@ class TaskCubit extends Cubit<TaskState> {
       final updatedTagIds = List<String>.from(task.tagIds!)..remove(tagIdToDelete);
       await taskRepository.updateTask(task.copyWith(tagIds: updatedTagIds.isNotEmpty ? updatedTagIds : null));
     }
-    // await loadInitialData(); // Bỏ dòng này
     print("Tasks updated for tag deletion: $tagIdToDelete");
   }
 
-  // THÊM HÀM ĐIỀU PHỐI XÓA PROJECT
   Future<void> deleteProjectAndUpdateTasks(String projectId) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
     emit(state.copyWith(isLoading: true));
     try {
       print('TaskCubit: Starting deletion process for project ID: $projectId');
-      // Bước 1: Cập nhật các task liên quan
       await updateTasksOnProjectDeletion(projectId);
-
-      // Bước 2: Xóa project khỏi Hive
       await projectTagRepository.deleteProjectByKey(projectId);
       print('TaskCubit: Project $projectId deleted from repository.');
-
-      // Bước 3: Load lại toàn bộ dữ liệu để cập nhật UI
       await loadInitialData();
       print('TaskCubit: Initial data reloaded after project deletion.');
     } catch (e) {
       print("Error deleting project and updating tasks: $e");
       emit(state.copyWith(isLoading: false));
-      throw Exception("Lỗi khi xóa project: ${e.toString().replaceFirst("Exception: ", "")}");
+      throw Exception("${AppStrings.errorDeletingProjectColon} ${e.toString().replaceFirst("Exception: ", "")}");
     }
   }
 
-  // THÊM HÀM ĐIỀU PHỐI XÓA TAG
   Future<void> deleteTagAndUpdateTasks(String tagId) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
     emit(state.copyWith(isLoading: true));
     try {
       print('TaskCubit: Starting deletion process for tag ID: $tagId');
-      // Bước 1: Cập nhật các task liên quan
       await updateTasksOnTagDeletion(tagId);
-
-      // Bước 2: Xóa tag khỏi Hive
       await projectTagRepository.deleteTagByKey(tagId);
       print('TaskCubit: Tag $tagId deleted from repository.');
-
-      // Bước 3: Load lại toàn bộ dữ liệu
       await loadInitialData();
       print('TaskCubit: Initial data reloaded after tag deletion.');
     } catch (e) {
       print("Error deleting tag and updating tasks: $e");
       emit(state.copyWith(isLoading: false));
-      throw Exception("Lỗi khi xóa tag: ${e.toString().replaceFirst("Exception: ", "")}");
+      throw Exception("${AppStrings.errorDeletingTagColon} ${e.toString().replaceFirst("Exception: ", "")}");
     }
   }
 
   Future<void> updateTask(Task task) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
 
     if (task.userId != null && task.userId != user.uid) {
-      print('Cảnh báo: Cố gắng cập nhật task không thuộc sở hữu của người dùng hiện tại. Task UserID: ${task.userId}, Current UserID: ${user.uid}');
-      throw Exception('Bạn không có quyền cập nhật task này.');
+      print('Warning: Attempting to update task not owned by current user. Task UserID: ${task.userId}, Current UserID: ${user.uid}');
+      throw Exception(AppStrings.noPermissionToUpdateTask);
     }
 
     Task taskToUpdate = task.copyWith(userId: user.uid);
@@ -218,8 +202,8 @@ class TaskCubit extends Cubit<TaskState> {
 
   Future<void> deleteTask(Task task) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
-    if (task.userId != user.uid && task.userId != null) throw Exception('Bạn không có quyền xóa task này.');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
+    if (task.userId != user.uid && task.userId != null) throw Exception(AppStrings.noPermissionToDeleteTask);
 
     await taskRepository.deleteTask(task);
     await loadInitialData();
@@ -227,8 +211,8 @@ class TaskCubit extends Cubit<TaskState> {
 
   Future<void> restoreTask(Task task) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
-    if (task.userId != user.uid && task.userId != null) throw Exception('Bạn không có quyền khôi phục task này.');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
+    if (task.userId != user.uid && task.userId != null) throw Exception(AppStrings.noPermissionToRestoreTask);
 
     final restoredCategory = task.originalCategory ?? 'Planned';
     await taskRepository.updateTask(
@@ -260,10 +244,10 @@ class TaskCubit extends Cubit<TaskState> {
 
     for (var task in allTasks) {
       final prompt = '''
-      Kiểm tra xem task sau có phù hợp với query không:
+      Check if the following task matches the query:
       - Task title: "${task.title}"
       - Query: "$query"
-      Trả về true/false.
+      Return true/false.
       ''';
       try {
         final response = await _geminiService.generateContent([Content.text(prompt)]);
@@ -271,7 +255,7 @@ class TaskCubit extends Cubit<TaskState> {
           filteredTasks.add(task);
         }
       } catch (e) {
-        print('Lỗi khi dùng Gemini để search task ${task.title}: $e');
+        print('Error using Gemini to search task ${task.title}: $e');
       }
     }
     emit(state.copyWith(tasks: filteredTasks, isLoading: false, allProjects: state.allProjects, allTags: state.allTags));
@@ -285,35 +269,30 @@ class TaskCubit extends Cubit<TaskState> {
   }
 
   void toggleTaskSelection(Task task) {
-
     final currentSelectedTasks = List<Task>.from(state.selectedTasks);
-    final existingTaskIndex = currentSelectedTasks.indexWhere((t) => t.id == task.id); // Task.id giờ là String và non-null
+    final existingTaskIndex = currentSelectedTasks.indexWhere((t) => t.id == task.id);
 
     if (existingTaskIndex != -1) {
-      // Task đã được chọn -> bỏ chọn
       currentSelectedTasks.removeAt(existingTaskIndex);
     } else {
-      // Task chưa được chọn -> chọn task này
       currentSelectedTasks.add(task);
     }
 
-    // Mặc định giữ nguyên trạng thái isSelectionMode hiện tại
     bool newIsSelectionMode = state.isSelectionMode;
 
-
     if (state.isSelectionMode && currentSelectedTasks.isEmpty) {
-      newIsSelectionMode = false; // Thì TẮT chế độ chọn nhiều
+      newIsSelectionMode = false;
     }
 
     emit(state.copyWith(
       selectedTasks: currentSelectedTasks,
-      isSelectionMode: newIsSelectionMode, // Cập nhật lại isSelectionMode
+      isSelectionMode: newIsSelectionMode,
     ));
   }
 
   Future<void> restoreSelectedTasks() async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
     if (state.selectedTasks.isEmpty) return;
 
     for (var task in state.selectedTasks) {
@@ -332,7 +311,7 @@ class TaskCubit extends Cubit<TaskState> {
 
   Future<void> deleteSelectedTasks() async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    if (user == null) throw Exception(AppStrings.userNotLoggedIn);
     if (state.selectedTasks.isEmpty) return;
 
     for (var task in state.selectedTasks) {
@@ -381,12 +360,8 @@ class TaskCubit extends Cubit<TaskState> {
     if (criteria == 'title') {
       trashTasks.sort((a, b) => (a.title ?? '').toLowerCase().compareTo((b.title ?? '').toLowerCase()));
     } else if (criteria == 'deletedDate') {
-      // Giả sử bạn thêm trường `deletedAt` vào TaskModel khi task vào thùng rác
-      // Nếu không, có thể dùng `completionDate` (nếu nó được cập nhật khi vào thùng rác)
-      // hoặc `createdAt` (ít chính xác hơn)
       trashTasks.sort((a, b) {
-        // final dateA = a.deletedAt ?? a.completionDate ?? DateTime(1900);
-        final dateA = a.completionDate ?? DateTime(1900); // Dùng tạm completionDate
+        final dateA = a.completionDate ?? DateTime(1900);
         final dateB = b.completionDate ?? DateTime(1900);
         return dateB.compareTo(dateA);
       });

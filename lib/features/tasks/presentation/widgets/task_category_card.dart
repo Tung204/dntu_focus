@@ -30,7 +30,7 @@ class TaskCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Màu chữ theo theme
+    // Text colors based on theme
     final Color titleTextColor = isDark
         ? FigmaColors.textOnPrimary
         : FigmaColors.textPrimary;
@@ -54,7 +54,7 @@ class TaskCategoryCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hàng 1: Icon + Tiêu đề
+              // Row 1: Icon + Title
               Row(
                 children: [
                   if (icon != null)
@@ -80,7 +80,7 @@ class TaskCategoryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // Hàng 2: Thời gian và số nhiệm vụ (nếu showDetails)
+              // Row 2: Time and task count (if showDetails)
               if (showDetails) ...[
                 const SizedBox(height: 6),
                 Text(

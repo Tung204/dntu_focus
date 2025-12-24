@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text(
-                      'Strict Mode đang bật! Không thể thoát ứng dụng.',
+                      'Strict Mode is enabled! Cannot exit app.',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -703,7 +703,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!isEditable) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vui lòng dừng timer hoàn toàn hoặc chờ hết giờ để chỉnh Timer Mode!'),
+          content: Text('Please stop the timer completely or wait for it to finish before adjusting Timer Mode!'),
           duration: Duration(seconds: 3),
         ),
       );

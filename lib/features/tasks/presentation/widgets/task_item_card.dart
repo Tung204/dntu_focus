@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart'; // Để định dạng ngày nếu cần
+import 'package:intl/intl.dart'; // For date formatting if needed
+import '../../../../core/constants/app_strings.dart';
 import '../../data/models/project_model.dart';
 import '../../data/models/tag_model.dart';
 import '../../domain/task_cubit.dart';
@@ -26,8 +27,8 @@ class TaskItemCard extends StatelessWidget {
     this.showDetails = true,
     this.padding = const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
     this.actionButton,
-    this.onLongPress, // Thêm vào constructor
-    this.isSelected = false, // Thêm vào constructor, mặc định là false
+    this.onLongPress, // Added to constructor
+    this.isSelected = false, // Added to constructor, default is false
   });
 
   IconData _getDueDateIconData(BuildContext context, DateTime? dueDate) {
@@ -55,19 +56,19 @@ class TaskItemCard extends StatelessWidget {
 
     String? projectNameDisplay;
     IconData projectIconData = Icons.bookmark_border;
-    Color projectAccentColor = Colors.transparent; // Màu mặc định cho dải màu
+    Color projectAccentColor = Colors.transparent; // Default color for project accent
 
     if (task.projectId != null && task.projectId != 'no_project_id' && task.projectId!.isNotEmpty) {
       try {
         final project = allProjects.firstWhere((p) => p.id == task.projectId);
         projectNameDisplay = project.name;
-        projectAccentColor = project.color; // Lấy màu từ project cho dải màu
+        projectAccentColor = project.color; // Get color from project for accent
         if (project.icon != null) {
           projectIconData = project.icon!;
         }
       } catch (e) {
-        print('TaskItemCard: Không tìm thấy project với ID: ${task.projectId} cho task "${task.title}"');
-        // projectNameDisplay = task.projectId; // Gỡ comment nếu muốn hiển thị ID khi lỗi
+        print('TaskItemCard: Project not found with ID: ${task.projectId} for task "${task.title}"');
+        // projectNameDisplay = task.projectId; // Uncomment to show ID on error
       }
     }
 
@@ -80,22 +81,22 @@ class TaskItemCard extends StatelessWidget {
         color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.15) : Theme.of(context).cardTheme.color,
         elevation: 1.5,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // Bo góc ngoài của Card
+          borderRadius: BorderRadius.circular(10), // Rounded corners for Card
         ),
         margin: const EdgeInsets.symmetric(vertical: 6.0),
-        clipBehavior: Clip.antiAlias, // Đảm bảo dải màu không bị tràn ra ngoài nếu Card có bo góc
-        child: IntrinsicHeight( // Đảm bảo Row bên trong có cùng chiều cao
+        clipBehavior: Clip.antiAlias, // Ensure accent color doesn't overflow if Card has rounded corners
+        child: IntrinsicHeight( // Ensure Row inside has same height
           child: Row(
             children: [
-              // Dải màu của dự án
+              // Project accent color strip
               Container(
-                width: 6, // Độ rộng của dải màu
+                width: 6, // Width of accent strip
                 decoration: BoxDecoration(
                   color: projectAccentColor,
-                  // Không cần borderRadius ở đây nữa vì Card đã clip
+                  // No borderRadius needed here as Card already clips
                 ),
               ),
-              // Nội dung chính của card
+              // Main card content
               Expanded(
                 child: InkWell(
                   onTap: onTap,
@@ -125,10 +126,10 @@ class TaskItemCard extends StatelessWidget {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center, // Căn giữa nội dung trong Column
+                            mainAxisAlignment: MainAxisAlignment.center, // Center content in Column
                             children: [
                               Text(
-                                task.title ?? 'Task không có tiêu đề',
+                                task.title ?? AppStrings.untitledTask,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   decoration: isTaskCompleted ? TextDecoration.lineThrough : null,
                                   color: isTaskCompleted
@@ -149,7 +150,7 @@ class TaskItemCard extends StatelessWidget {
                                     Tag? currentTag;
                                     try {
                                       currentTag = allTags.firstWhere((t) => t.id == tagId);
-                                    } catch (e) { /* Lỗi đã được log */ }
+                                    } catch (e) { /* Error already logged */ }
                                     if (currentTag == null) return const SizedBox.shrink();
                                     return Text(
                                       '#${currentTag.name}',
@@ -233,7 +234,7 @@ class TaskItemCard extends StatelessWidget {
                         else if (!isTaskCompleted)
                           IconButton(
                             icon: Icon(
-                              Icons.play_circle, // Icon này có vẻ phù hợp hơn cho "play"
+                              Icons.play_circle, // This icon seems more appropriate for "play"
                               color: Theme.of(context).colorScheme.secondary,
                               size: 27,
                             ),
@@ -241,10 +242,10 @@ class TaskItemCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             splashRadius: 22,
-                            tooltip: 'Start Pomodoro for this task', // Thêm tooltip
+                            tooltip: AppStrings.startPomodoroForTask,
                           ),
-                        if (isTaskCompleted && actionButton == null) // Giữ khoảng trống nếu đã hoàn thành và không có actionButton
-                          const SizedBox(width: 48), // Bằng kích thước IconButton
+                        if (isTaskCompleted && actionButton == null) // Keep space if completed and no actionButton
+                          const SizedBox(width: 48), // Same size as IconButton
                       ],
                     ),
                   ),

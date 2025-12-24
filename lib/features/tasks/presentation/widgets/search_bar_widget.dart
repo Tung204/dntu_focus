@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../core/themes/design_tokens.dart';
+import '../../../../core/constants/app_strings.dart';
 
-/// Widget thanh tìm kiếm cho Task Manager Screen
-/// Thiết kế theo Figma với rounded corners và light gray background
+/// Search bar widget for Task Manager Screen
+/// Designed according to Figma with rounded corners and light gray background
 ///
-/// NOTE: Search functionality cơ bản đã được implement.
-/// Để filter tasks theo search query, cần thêm logic vào TaskCubit hoặc parent widget.
+/// NOTE: Basic search functionality has been implemented.
+/// To filter tasks by search query, add logic to TaskCubit or parent widget.
 class SearchBarWidget extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
@@ -17,7 +18,7 @@ class SearchBarWidget extends StatefulWidget {
     required this.controller,
     this.onChanged,
     this.onSearch,
-    this.hintText = 'Tìm kiếm...',
+    this.hintText = AppStrings.search,
   });
 
   @override
@@ -38,7 +39,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
   }
 
   void _onTextChanged() {
-    setState(() {}); // Rebuild để hiển thị/ẩn clear button
+    setState(() {}); // Rebuild to show/hide clear button
   }
 
   @override

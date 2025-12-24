@@ -1,79 +1,79 @@
 class AppStrings {
-  static const String cancel = 'Hủy';
+  static const String cancel = 'Cancel';
   static const String ok = 'OK';
   
   // Timer Mode - General
-  static const String timerModeTitle = 'Chế độ đồng hồ';
-  static const String timerModeLabel = 'Chế độ timer';
-  static const String timerModeHelper = 'Chọn chế độ timer phù hợp';
+  static const String timerModeTitle = 'Timer Mode';
+  static const String timerModeLabel = 'Timer mode';
+  static const String timerModeHelper = 'Choose the appropriate timer mode';
   
   // Timer Mode - Simple/Advanced Toggle
-  static const String simpleMode = 'Chế độ đơn giản';
-  static const String advancedMode = 'Chế độ nâng cao';
-  static const String switchToAdvanced = 'Chuyển sang nâng cao';
-  static const String switchToSimple = 'Chuyển sang đơn giản';
+  static const String simpleMode = 'Simple Mode';
+  static const String advancedMode = 'Advanced Mode';
+  static const String switchToAdvanced = 'Switch to Advanced';
+  static const String switchToSimple = 'Switch to Simple';
   
   // Timer Mode - Countdown Option
   static const String timerModeCountdown = '25:00 → 00:00';
   static const String timerModeCountdownTitle = '25:00 → 00:00';
-  static const String timerModeCountdownDesc = 'Đếm ngược từ 25 phút cho đến khi hết thời gian';
+  static const String timerModeCountdownDesc = 'Count down from 25 minutes until time runs out';
   
   // Timer Mode - Count Up Option
   static const String timerModeCountUp = '00:00 → ∞';
   static const String timerModeCountUpTitle = '00:00 → ∞';
-  static const String timerModeCountUpDesc = 'Bắt đầu đếm từ 0 cho đến khi dừng thủ công';
+  static const String timerModeCountUpDesc = 'Start counting from 0 until stopped manually';
   
   // Timer Mode - Custom Option
-  static const String timerModeCustom = 'Tùy chỉnh';
-  static const String timerModePomodoro = 'Pomodoro (25 phút)';
-  static const String timerModeCountUpInfinite = 'Đếm ngược vô tận';
+  static const String timerModeCustom = 'Custom';
+  static const String timerModePomodoro = 'Pomodoro (25 minutes)';
+  static const String timerModeCountUpInfinite = 'Count up infinite';
   
   // Work & Break Duration
-  static const String workDurationLabel = 'Thời gian làm việc (phút)';
-  static const String workDurationHelper = 'Nhập từ 1-480 phút';
-  static const String breakDurationLabel = 'Thời gian nghỉ (phút)';
-  static const String breakDurationHelper = 'Nhập từ 1-60 phút';
+  static const String workDurationLabel = 'Work Duration (minutes)';
+  static const String workDurationHelper = 'Enter 1-480 minutes';
+  static const String breakDurationLabel = 'Break Duration (minutes)';
+  static const String breakDurationHelper = 'Enter 1-60 minutes';
   
   // Sessions
-  static const String sessionsLabel = 'Số phiên Pomodoro';
-  static const String sessionsHelper = 'Nhập từ 1-10 phiên';
+  static const String sessionsLabel = 'Pomodoro Sessions';
+  static const String sessionsHelper = 'Enter 1-10 sessions';
   
   // Sound Settings
-  static const String soundLabel = 'Âm thanh thông báo';
-  static const String soundHelper = 'Phát âm thanh khi timer kết thúc';
-  static const String notificationSoundLabel = 'Âm thanh thông báo';
-  static const String notificationSoundHelper = 'Chọn âm thanh cho thông báo';
-  static const String soundBell = 'Chuông';
+  static const String soundLabel = 'Notification Sound';
+  static const String soundHelper = 'Play sound when timer ends';
+  static const String notificationSoundLabel = 'Notification Sound';
+  static const String notificationSoundHelper = 'Choose notification sound';
+  static const String soundBell = 'Bell';
   static const String soundChime = 'Chime';
-  static const String soundAlarm = 'Báo thức';
+  static const String soundAlarm = 'Alarm';
   
   // Auto Switch
-  static const String autoSwitchLabel = 'Tự động chuyển phiên';
-  static const String autoSwitchHelper = 'Tự động chuyển giữa làm việc và nghỉ ngơi';
+  static const String autoSwitchLabel = 'Auto Switch Sessions';
+  static const String autoSwitchHelper = 'Automatically switch between work and break';
   
   // Strict Mode
-  static const String strictModeTitle = 'Cài đặt Strict Mode';
-  static const String strictModeOffLabel = 'Tắt';
-  static const String strictModeOffHelper = 'Tắt toàn bộ Strict Mode';
-  static const String appBlockingLabel = 'Chặn ứng dụng';
-  static const String appBlockingHelper = 'Ngăn mở các ứng dụng đã chọn khi timer chạy';
-  static const String flipPhoneLabel = 'Lật điện thoại';
-  static const String flipPhoneHelper = 'Yêu cầu giữ điện thoại úp khi timer chạy';
-  static const String exitBlockingLabel = 'Cấm thoát';
-  static const String exitBlockingHelper = 'Ngăn thoát ứng dụng khi timer chạy';
-  static const String selectApps = 'Chọn ứng dụng';
-  static const String selectAppsTitle = 'Chọn ứng dụng để chặn';
+  static const String strictModeTitle = 'Strict Mode Settings';
+  static const String strictModeOffLabel = 'Off';
+  static const String strictModeOffHelper = 'Turn off all Strict Mode';
+  static const String appBlockingLabel = 'Block Apps';
+  static const String appBlockingHelper = 'Prevent opening selected apps while timer is running';
+  static const String flipPhoneLabel = 'Flip Phone';
+  static const String flipPhoneHelper = 'Require keeping phone face down while timer is running';
+  static const String exitBlockingLabel = 'Prohibit Exit';
+  static const String exitBlockingHelper = 'Prevent exiting app while timer is running';
+  static const String selectApps = 'Select Apps';
+  static const String selectAppsTitle = 'Select Apps to Block';
   
   // Error Messages
-  static const String timerRunningError = 'Vui lòng dừng timer hoàn toàn hoặc chờ hết giờ để chỉnh Timer Mode!';
+  static const String timerRunningError = 'Please stop the timer completely or wait for it to finish before adjusting Timer Mode!';
   
   // Time Presets
-  static const String workDuration15Min = '15 phút';
-  static const String workDuration25Min = '25 phút';
-  static const String workDuration45Min = '45 phút';
-  static const String workDuration60Min = '60 phút';
-  static const String breakDuration5Min = '5 phút';
-  static const String breakDuration10Min = '10 phút';
-  static const String breakDuration15Min = '15 phút';
-  static const String breakDuration30Min = '30 phút';
+  static const String workDuration15Min = '15 minutes';
+  static const String workDuration25Min = '25 minutes';
+  static const String workDuration45Min = '45 minutes';
+  static const String workDuration60Min = '60 minutes';
+  static const String breakDuration5Min = '5 minutes';
+  static const String breakDuration10Min = '10 minutes';
+  static const String breakDuration15Min = '15 minutes';
+  static const String breakDuration30Min = '30 minutes';
 }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:moji_todo/core/constants/app_strings.dart';
 import 'package:moji_todo/features/tasks/data/models/project_model.dart';
 import 'package:moji_todo/features/tasks/presentation/widgets/task_item_card.dart';
 import '../domain/task_cubit.dart';
@@ -10,11 +11,11 @@ import '../data/models/tag_model.dart';
 import '../data/models/task_model.dart';
 import 'task_detail_screen.dart';
 import 'add_task/add_task_bottom_sheet.dart';
-// import 'package:collection/collection.dart'; // Bỏ comment nếu dùng firstWhereOrNull
+// import 'package:collection/collection.dart'; // Uncomment if using firstWhereOrNull
 
 class TaskListScreen extends StatelessWidget {
   final String category;
-  final String? filterId; // Sẽ là projectId nếu category == 'project'
+  final String? filterId; // Will be projectId if category == 'project'
 
   const TaskListScreen({
     super.key,
@@ -29,12 +30,12 @@ class TaskListScreen extends StatelessWidget {
       tagBox: Hive.box<Tag>('tags'),
     );
 
-    // Lắng nghe TaskState để lấy dữ liệu và rebuild khi cần
+    // Listen to TaskState to get data and rebuild when needed
     return BlocBuilder<TaskCubit, TaskState>(
       builder: (context, state) {
-        // Lấy allProjects từ state để tra cứu tên project
+        // Get allProjects from state to lookup project name
         final List<Project> allProjects = state.allProjects;
-        String screenTitle = category; // Tiêu đề mặc định
+        String screenTitle = category; // Default title
 
         List<Task> tasksToDisplay;
 
@@ -47,44 +48,44 @@ class TaskListScreen extends StatelessWidget {
                 task.category != 'Trash')
                 .toList();
             try {
-              // final project = allProjects.firstWhereOrNull((p) => p.id == filterId); // Dùng firstWhereOrNull từ package:collection
+              // final project = allProjects.firstWhereOrNull((p) => p.id == filterId); // Use firstWhereOrNull from package:collection
               final project = allProjects.firstWhere((p) => p.id == filterId);
               screenTitle = project.name;
             } catch (e) {
-              print('TaskListScreen: Không tìm thấy project với ID: $filterId');
-              screenTitle = 'Dự án không tồn tại';
+              print('TaskListScreen: ${AppStrings.projectNotFoundMessage}: $filterId');
+              screenTitle = AppStrings.projectNotFound;
             }
-          } else if (filterId == null || filterId == 'no_project_id') { // Xử lý trường hợp task không có project
+          } else if (filterId == null || filterId == 'no_project_id') { // Handle case where task has no project
             tasksToDisplay = state.tasks
                 .where((task) =>
             (task.projectId == null || task.projectId == 'no_project_id') &&
                 task.userId == FirebaseAuth.instance.currentUser?.uid &&
                 task.category != 'Trash')
                 .toList();
-            screenTitle = 'Không có dự án';
+            screenTitle = AppStrings.noProject;
           }
           else {
-            // Trường hợp category là 'project' nhưng filterId là null (không nên xảy ra nếu điều hướng đúng)
+            // Case where category is 'project' but filterId is null (shouldn't happen if navigation is correct)
             tasksToDisplay = [];
-            screenTitle = 'Dự án không xác định';
+            screenTitle = AppStrings.undefinedProject;
           }
         } else {
-          // Lọc theo category như cũ (Today, Tomorrow, This Week, Planned)
+          // Filter by category as before (Today, Tomorrow, This Week, Planned)
           final categorizedTasks = context.read<TaskCubit>().getCategorizedTasks();
           tasksToDisplay = categorizedTasks[category] ?? [];
-          // Cập nhật screenTitle cho các category thông thường
+          // Update screenTitle for common categories
           if (category == 'Today') {
-            screenTitle = 'Hôm nay';
-          } else if (category == 'Tomorrow') screenTitle = 'Ngày mai';
-          else if (category == 'This Week') screenTitle = 'Tuần này';
-          else if (category == 'Planned') screenTitle = 'Đã lên kế hoạch';
-          // Giữ nguyên `category` làm tiêu đề nếu không khớp các trường hợp trên
+            screenTitle = AppStrings.today;
+          } else if (category == 'Tomorrow') screenTitle = AppStrings.tomorrow;
+          else if (category == 'This Week') screenTitle = AppStrings.thisWeek;
+          else if (category == 'Planned') screenTitle = AppStrings.planned;
+          // Keep `category` as title if it doesn't match the above cases
         }
 
         if (state.isLoading && tasksToDisplay.isEmpty) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              padding: const EdgeInsets.only(top: 40), // Ép thêm padding phía trên
+              padding: const EdgeInsets.only(top: 40), // Add extra padding at top
             ),
             child: Scaffold(
               appBar: AppBar(
@@ -107,7 +108,7 @@ class TaskListScreen extends StatelessWidget {
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            padding: const EdgeInsets.only(top: 40), // Ép thêm padding phía trên
+            padding: const EdgeInsets.only(top: 40), // Add extra padding at top
           ),
           child: Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -121,7 +122,7 @@ class TaskListScreen extends StatelessWidget {
                 },
               ),
               title: Text(
-                screenTitle, // Sử dụng screenTitle đã được xác định
+                screenTitle, // Use the determined screenTitle
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               centerTitle: true,
@@ -135,13 +136,13 @@ class TaskListScreen extends StatelessWidget {
                         final TextEditingController controller = TextEditingController();
                         return AlertDialog(
                           title: Text(
-                            'Tìm kiếm trong "$screenTitle"',
+                            '${AppStrings.searchIn} "$screenTitle"',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           content: TextField(
                             controller: controller,
                             decoration: InputDecoration(
-                              hintText: 'Nhập tên task...',
+                              hintText: AppStrings.enterTaskName,
                               hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                               filled: true,
                               fillColor: Theme.of(context).colorScheme.surface,
@@ -154,16 +155,16 @@ class TaskListScreen extends StatelessWidget {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogContext),
-                              child: Text('Hủy', style: Theme.of(context).textTheme.bodyMedium),
+                              child: Text(AppStrings.cancel, style: Theme.of(context).textTheme.bodyMedium),
                             ),
                             TextButton(
                               onPressed: () async {
-                                // searchTasks sẽ tìm trên toàn bộ state.tasks
-                                // Sau đó TaskListScreen sẽ tự động rebuild và lọc lại tasksToDisplay
+                                // searchTasks will search on all state.tasks
+                                // Then TaskListScreen will automatically rebuild and filter tasksToDisplay again
                                 await context.read<TaskCubit>().searchTasks(controller.text);
                                 Navigator.pop(dialogContext);
                               },
-                              child: Text('Tìm kiếm', style: Theme.of(context).textTheme.bodyMedium),
+                              child: Text(AppStrings.searchButton, style: Theme.of(context).textTheme.bodyMedium),
                             ),
                           ],
                         );
@@ -173,16 +174,16 @@ class TaskListScreen extends StatelessWidget {
                 ),
                 PopupMenuButton<String>(
                   onSelected: (value) {
-                    // sortTasks sẽ sắp xếp state.tasks, sau đó TaskListScreen tự rebuild và lọc lại
-                    if (value == 'Sort by Due Date') {
+                    // sortTasks will sort state.tasks, then TaskListScreen will rebuild and filter again
+                    if (value == AppStrings.sortByDueDate) {
                       context.read<TaskCubit>().sortTasks('dueDate');
-                    } else if (value == 'Sort by Priority') {
+                    } else if (value == AppStrings.sortByPriority) {
                       context.read<TaskCubit>().sortTasks('priority');
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'Sort by Due Date', child: Text('Sắp xếp theo ngày đến hạn')),
-                    const PopupMenuItem(value: 'Sort by Priority', child: Text('Sắp xếp theo độ ưu tiên')),
+                    PopupMenuItem(value: AppStrings.sortByDueDate, child: Text(AppStrings.sortByDueDate)),
+                    PopupMenuItem(value: AppStrings.sortByPriority, child: Text(AppStrings.sortByPriority)),
                   ],
                 ),
               ],
@@ -192,7 +193,7 @@ class TaskListScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Phần hiển thị thông tin tổng hợp
+                  // Summary information display section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -213,7 +214,7 @@ class TaskListScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tổng thời gian dự kiến',
+                                AppStrings.totalEstimatedTime,
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                               ),
                             ],
@@ -238,7 +239,7 @@ class TaskListScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Thời gian đã hoàn thành',
+                                AppStrings.completedTime,
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                               ),
                             ],
@@ -268,7 +269,7 @@ class TaskListScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Task đang chờ',
+                                AppStrings.pendingTasks,
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                               ),
                             ],
@@ -293,7 +294,7 @@ class TaskListScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Task đã hoàn thành',
+                                AppStrings.completedTasks,
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                               ),
                             ],
@@ -303,7 +304,7 @@ class TaskListScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Nút "Thêm một task"
+                  // "Add a task" button
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -321,7 +322,7 @@ class TaskListScreen extends StatelessWidget {
                             maxHeight: MediaQuery.of(context).size.height * 0.8,
                           ),
                           builder: (_) => BlocProvider.value(
-                            value: context.read<TaskCubit>(), // Cung cấp TaskCubit hiện tại
+                            value: context.read<TaskCubit>(), // Provide current TaskCubit
                             child: AddTaskBottomSheet(
                               repository: projectTagRepository,
                             ),
@@ -329,7 +330,7 @@ class TaskListScreen extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        'Thêm một task.',
+                        AppStrings.addATask,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: 16,
@@ -343,16 +344,16 @@ class TaskListScreen extends StatelessWidget {
                     child: tasksToDisplay.isEmpty
                         ? Center(
                       child: Text(
-                        'Không có task nào trong mục "$screenTitle".', // Cập nhật thông báo
+                        '${AppStrings.noTasks} "$screenTitle".',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     )
                         : ListView.builder(
                       itemCount: waitingTasks.length + (completedTasks.isNotEmpty ? 1 : 0) + completedTasks.length,
                       itemBuilder: (context, index) {
-                        // TaskItemCard sẽ cần truy cập allProjects và allTags từ TaskState
-                        // để hiển thị tên project/tag từ ID.
-                        // Cách tốt nhất là TaskItemCard tự làm điều đó bằng context.read<TaskCubit>().state
+                        // TaskItemCard will need to access allProjects and allTags from TaskState
+                        // to display project/tag names from IDs.
+                        // Best way is for TaskItemCard to do this itself using context.read<TaskCubit>().state
                         if (index < waitingTasks.length) {
                           final task = waitingTasks[index];
                           return Padding(
@@ -375,7 +376,7 @@ class TaskListScreen extends StatelessWidget {
                                   context.read<TaskCubit>().updateTask(task.copyWith(isCompleted: value));
                                 }
                               },
-                              onPlayPressed: () { /* Logic Pomodoro */ },
+                              onPlayPressed: () { /* Pomodoro Logic */ },
                               showDetails: true,
                             ),
                           );
@@ -383,7 +384,7 @@ class TaskListScreen extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16.0),
                             child: Text(
-                              'Đã hoàn thành (${completedTasks.length})',
+                              '${AppStrings.completed} (${completedTasks.length})',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           );
@@ -413,7 +414,7 @@ class TaskListScreen extends StatelessWidget {
                                   context.read<TaskCubit>().updateTask(task.copyWith(isCompleted: value));
                                 }
                               },
-                              onPlayPressed: () { /* Logic Pomodoro */ },
+                              onPlayPressed: () { /* Pomodoro Logic */ },
                               showDetails: true,
                             ),
                           );
@@ -426,7 +427,7 @@ class TaskListScreen extends StatelessWidget {
               ),
             ),
             floatingActionButton: FloatingActionButton(
-              heroTag: 'task_list_screen_fab', // Đảm bảo heroTag là duy nhất
+              heroTag: 'task_list_screen_fab', // Ensure heroTag is unique
               backgroundColor: Theme.of(context).floatingActionButtonTheme.backgroundColor,
               onPressed: () {
                 showModalBottomSheet(
