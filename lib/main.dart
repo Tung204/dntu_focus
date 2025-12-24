@@ -65,7 +65,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('[INIT] Starting app initialization...');
   
-  // Kiểm tra Firebase đã được khởi tạo chưa
+  // Check if Firebase is already initialized to avoid duplicate-app error
   if (Firebase.apps.isEmpty) {
     print('[INIT] Initializing Firebase...');
     await Firebase.initializeApp(
@@ -98,7 +98,6 @@ void main() async {
   await notificationService.init();
   print('[INIT] Notification service initialized');
 
-  print('[INIT] Creating Firebase service...');
   print('[INIT] Creating Firebase service...');
   final firebaseService = FirebaseService();
   final authRepository = AuthRepository(firebaseService);

@@ -90,7 +90,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ),
               title: Text(
-                'Lịch',
+                'Calendar',
                 style: TextStyle(
                   color: Theme.of(context).textTheme.titleLarge?.color,
                   fontSize: titleSize,
@@ -124,6 +124,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             body: Column(
               children: [
                 TableCalendar(
+                  locale: 'en_US',
                   firstDay: DateTime.now().subtract(const Duration(days: 365)),
                   lastDay: DateTime.now().add(const Duration(days: 365 * 2)),
                   focusedDay: _focusedDay,
@@ -287,7 +288,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tasks cho ${(_selectedDay != null) ? "${_selectedDay!.day}/${_selectedDay!.month}/${_selectedDay!.year}" : "ngày được chọn"}',
+                          'Tasks for ${(_selectedDay != null) ? "${_selectedDay!.month}/${_selectedDay!.day}/${_selectedDay!.year}" : "selected date"}',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
@@ -296,7 +297,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             : tasksForSelectedDay.isEmpty
                             ? Center(
                           child: Text(
-                            'Không có task nào cho ngày này.',
+                            'No tasks for this day.',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
                           ),
                         )

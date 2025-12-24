@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/themes/design_tokens.dart';
 import '../data/models/project_model.dart';
@@ -32,7 +33,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
     super.dispose();
   }
 
-  /// Tính aspect ratio động cho grid items
+  /// Calculate dynamic aspect ratio for grid items
   double _calculateAspectRatio(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth - 48 - 12) / 2;
@@ -40,7 +41,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
     return cardWidth / minHeight;
   }
 
-  /// Tính aspect ratio cho compact cards (Hoàn thành, Thùng rác)
+  /// Calculate aspect ratio for compact cards (Completed, Trash)
   double _calculateCompactAspectRatio(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth - 48 - 12) / 2;
@@ -48,7 +49,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
     return cardWidth / minHeight;
   }
 
-  /// Lấy số cột dựa trên kích thước màn hình
+  /// Get column count based on screen size
   int _getCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     if (width > 600) return 3;
@@ -68,7 +69,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
           appBar: const CustomAppBar(),
           body: Center(
             child: Text(
-              'Vui lòng đăng nhập để tiếp tục.',
+              AppStrings.pleaseLoginToContinue,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -159,7 +160,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'Manage Projects and Tags',
-                      child: Text('Quản lý Dự án và Nhãn'),
+                      child: Text(AppStrings.manageProjectsAndTags),
                     ),
                   ],
                 ),
@@ -174,7 +175,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                 ),
                 child: SearchBarWidget(
                   controller: _searchController,
-                  hintText: 'Tìm kiếm',
+                  hintText: AppStrings.search,
                   onChanged: (value) {
                     // TODO: Implement search filtering logic
                   },
@@ -186,7 +187,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
             top: false,
             child: CustomScrollView(
               slivers: [
-                // Category Cards Grid (4 cards với details)
+                // Category Cards Grid (4 cards with details)
                 SliverPadding(
                   padding: FigmaSpacing.screenPadding
                       .copyWith(bottom: 0, top: FigmaSpacing.md),
@@ -199,7 +200,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                     ),
                     delegate: SliverChildListDelegate([
                       TaskCategoryCard(
-                        title: 'Hôm nay',
+                        title: AppStrings.today,
                         totalTime: context
                             .read<TaskCubit>()
                             .calculateTotalTime(categorizedTasks['Today'] ?? []),
@@ -218,7 +219,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                         },
                       ),
                       TaskCategoryCard(
-                        title: 'Ngày mai',
+                        title: AppStrings.tomorrow,
                         totalTime: context.read<TaskCubit>().calculateTotalTime(
                             categorizedTasks['Tomorrow'] ?? []),
                         taskCount: categorizedTasks['Tomorrow']?.length ?? 0,
@@ -236,7 +237,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                         },
                       ),
                       TaskCategoryCard(
-                        title: 'Tuần này',
+                        title: AppStrings.thisWeek,
                         totalTime: context.read<TaskCubit>().calculateTotalTime(
                             categorizedTasks['This Week'] ?? []),
                         taskCount: categorizedTasks['This Week']?.length ?? 0,
@@ -254,7 +255,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                         },
                       ),
                       TaskCategoryCard(
-                        title: 'Kế hoạch',
+                        title: AppStrings.planned,
                         totalTime: context.read<TaskCubit>().calculateTotalTime(
                             categorizedTasks['Planned'] ?? []),
                         taskCount: categorizedTasks['Planned']?.length ?? 0,
@@ -275,7 +276,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                   ),
                 ),
 
-                // Compact Cards Grid (Hoàn thành, Thùng rác)
+                // Compact Cards Grid (Completed, Trash)
                 SliverPadding(
                   padding: FigmaSpacing.screenPadding.copyWith(top: 12),
                   sliver: SliverGrid(
@@ -287,7 +288,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                     ),
                     delegate: SliverChildListDelegate([
                       TaskCategoryCard(
-                        title: 'Hoàn thành',
+                        title: AppStrings.completed,
                         totalTime: '',
                         taskCount: categorizedTasks['Completed']?.length ?? 0,
                         borderColor: Colors.green[300]!,
@@ -305,7 +306,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                         },
                       ),
                       TaskCategoryCard(
-                        title: 'Thùng rác',
+                        title: AppStrings.trash,
                         totalTime: '',
                         taskCount: categorizedTasks['Trash']?.length ?? 0,
                         borderColor: Colors.orange[300]!,
@@ -334,7 +335,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                       bottom: FigmaSpacing.md,
                     ),
                     child: Text(
-                      'Dự án',
+                      AppStrings.projects,
                       style: FigmaTextStyles.h3.copyWith(
                         color: isDark
                             ? FigmaColors.textOnPrimary
@@ -364,7 +365,7 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                         Project? projectModel;
 
                         if (projectIdFromKey == 'no_project_id') {
-                          projectNameDisplay = 'Không có dự án';
+                          projectNameDisplay = AppStrings.noProject;
                           projectColorDisplay =
                               projectBorderColors['no_project_id_display_name'] ??
                                   Colors.grey;
@@ -381,9 +382,9 @@ class _TaskManageScreenState extends State<TaskManageScreen> {
                                 projectIcons[projectModel.name];
                           } catch (e) {
                             debugPrint(
-                                'Lỗi TaskManageScreen: Không tìm thấy project với ID: $projectIdFromKey');
+                                'Error TaskManageScreen: Project not found with ID: $projectIdFromKey');
                             projectNameDisplay =
-                                'Dự án ID: ${projectIdFromKey.substring(0, (projectIdFromKey.length > 8) ? 8 : projectIdFromKey.length)}...';
+                                'Project ID: ${projectIdFromKey.substring(0, (projectIdFromKey.length > 8) ? 8 : projectIdFromKey.length)}...';
                             projectColorDisplay = Colors.grey;
                             projectIconDisplay = Icons.folder_off_outlined;
                           }

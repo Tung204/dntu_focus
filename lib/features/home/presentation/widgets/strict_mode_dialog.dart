@@ -71,7 +71,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                 child: Text(
-                  'Chế độ nghiêm ngặt',
+                  'Strict Mode',
                   style: FigmaTextStyles.h4.copyWith(
                     color: FigmaColors.textPrimary,
                   ),
@@ -90,7 +90,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
                     children: [
                       // Block Notifications - REQUIRES PERMISSION
                       _buildSwitchTile(
-                        title: 'Chặn thông báo',
+                        title: 'Block Notifications',
                         value: _blockNotifications,
                         onChanged: (value) => _handleToggle(
                           newValue: value,
@@ -98,23 +98,23 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
                           onSuccess: (v) => setState(() => _blockNotifications = v),
                         ),
                         subtitle: currentState.hasDNDPermission
-                            ? 'Tắt tất cả thông báo khi tập trung'
-                            : 'Cần cấp quyền Do Not Disturb',
+                            ? 'Disable all notifications while focusing'
+                            : 'Requires Do Not Disturb permission',
                         requiresPermission: true,
                         hasPermission: currentState.hasDNDPermission,
                       ),
                       
                       // Block Phone Calls - DISABLED
                       _buildSwitchTile(
-                        title: 'Chặn cuộc gọi',
+                        title: 'Block Phone Calls',
                         value: _blockPhoneCalls,
                         onChanged: null, // Still disabled
-                        subtitle: 'Tính năng đang phát triển',
+                        subtitle: 'Feature under development',
                       ),
                       
                       // Block Other Apps - REQUIRES PERMISSION
                       _buildSwitchTile(
-                        title: 'Chặn ứng dụng khác',
+                        title: 'Block Other Apps',
                         value: _blockOtherApps,
                         onChanged: (value) => _handleToggle(
                           newValue: value,
@@ -122,26 +122,26 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
                           onSuccess: (v) => setState(() => _blockOtherApps = v),
                         ),
                         subtitle: currentState.hasAccessibilityPermission
-                            ? 'Ngăn mở các ứng dụng gây xao nhãng'
-                            : 'Cần bật Accessibility Service',
+                            ? 'Prevent opening distracting apps'
+                            : 'Requires Accessibility Service',
                         requiresPermission: true,
                         hasPermission: currentState.hasAccessibilityPermission,
                       ),
                       
                       // Lock Phone - NO PERMISSION NEEDED
                       _buildSwitchTile(
-                        title: 'Giữ màn hình sáng',
+                        title: 'Keep Screen On',
                         value: _lockPhone,
                         onChanged: (value) => setState(() => _lockPhone = value),
-                        subtitle: 'Màn hình không tự tắt khi tập trung',
+                        subtitle: 'Screen stays on while focusing',
                       ),
                       
                       // Prohibit Exit - NO PERMISSION NEEDED
                       _buildSwitchTile(
-                        title: 'Cấm thoát ứng dụng',
+                        title: 'Prohibit Exit',
                         value: _prohibitExit,
                         onChanged: (value) => setState(() => _prohibitExit = value),
-                        subtitle: 'Không thể thoát khi đang tập trung',
+                        subtitle: 'Cannot exit app while focusing',
                       ),
                     ],
                   ),
@@ -167,7 +167,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
                           ),
                         ),
                         child: Text(
-                          'Hủy',
+                          'Cancel',
                           style: FigmaTextStyles.labelMedium.copyWith(
                             color: FigmaColors.textSecondary,
                           ),
@@ -190,7 +190,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
                           ),
                         ),
                         child: Text(
-                          'Lưu',
+                          'Save',
                           style: FigmaTextStyles.labelMedium.copyWith(
                             color: FigmaColors.white,
                           ),
@@ -330,7 +330,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
-                'Vui lòng cấp quyền trong cài đặt, sau đó quay lại và thử lại',
+                'Please grant permission in settings, then return and try again',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
               backgroundColor: FigmaColors.warning,
@@ -354,15 +354,15 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
   String _getFeatureName(StrictModeFeature feature) {
     switch (feature) {
       case StrictModeFeature.blockNotifications:
-        return 'Chặn thông báo';
+        return 'Block Notifications';
       case StrictModeFeature.blockOtherApps:
-        return 'Chặn ứng dụng khác';
+        return 'Block Other Apps';
       case StrictModeFeature.blockPhoneCalls:
-        return 'Chặn cuộc gọi';
+        return 'Block Phone Calls';
       case StrictModeFeature.lockPhone:
-        return 'Giữ màn hình sáng';
+        return 'Keep Screen On';
       case StrictModeFeature.prohibitExit:
-        return 'Cấm thoát ứng dụng';
+        return 'Prohibit Exit';
     }
   }
 
@@ -388,7 +388,7 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Không thể thay đổi Strict Mode khi timer đang chạy',
+            'Cannot change Strict Mode while timer is running',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
           backgroundColor: FigmaColors.error,
@@ -419,8 +419,8 @@ class _StrictModeDialogState extends State<StrictModeDialog> {
       SnackBar(
         content: Text(
           _isAnyStrictModeEnabled()
-              ? 'Strict Mode đã được bật'
-              : 'Strict Mode đã được tắt',
+              ? 'Strict Mode enabled'
+              : 'Strict Mode disabled',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -473,7 +473,7 @@ class _PermissionRequestDialog extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              'Cần cấp quyền',
+              'Permission Required',
               style: FigmaTextStyles.h4.copyWith(
                 color: FigmaColors.textPrimary,
                 fontSize: 18,
@@ -483,7 +483,7 @@ class _PermissionRequestDialog extends StatelessWidget {
         ],
       ),
       content: Text(
-        'Để sử dụng tính năng "$featureName", bạn cần cấp quyền "$permissionName" cho ứng dụng.\n\nBạn có muốn mở cài đặt để cấp quyền?',
+        'To use "$featureName" feature, you need to grant "$permissionName" permission to the app.\n\nDo you want to open settings to grant permission?',
         style: FigmaTextStyles.bodyMedium.copyWith(
           fontSize: 14,
           color: FigmaColors.textSecondary,
@@ -493,7 +493,7 @@ class _PermissionRequestDialog extends StatelessWidget {
         TextButton(
           onPressed: onCancel,
           child: Text(
-            'Hủy',
+            'Cancel',
             style: FigmaTextStyles.labelMedium.copyWith(
               color: FigmaColors.textSecondary,
             ),
@@ -509,7 +509,7 @@ class _PermissionRequestDialog extends StatelessWidget {
             ),
           ),
           child: Text(
-            'Mở cài đặt',
+            'Open Settings',
             style: FigmaTextStyles.labelMedium.copyWith(
               color: FigmaColors.white,
             ),

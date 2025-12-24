@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:moji_todo/features/tasks/data/models/project_model.dart';
-import 'package:moji_todo/features/tasks/data/models/tag_model.dart'; // Model đã được cập nhật
+import 'package:moji_todo/features/tasks/data/models/tag_model.dart';
 import '../../../core/themes/theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../domain/task_cubit.dart';
 import '../data/models/task_model.dart';
 
@@ -12,7 +13,7 @@ class TaskDetailScreen extends StatelessWidget {
   const TaskDetailScreen({super.key, required this.task});
 
   String _formatDueDate(DateTime? dueDate) {
-    if (dueDate == null) return 'Hôm nay'; // Hoặc 'Không có' nếu bạn muốn
+    if (dueDate == null) return AppStrings.today;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -20,9 +21,9 @@ class TaskDetailScreen extends StatelessWidget {
     final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
 
     if (dueDateOnly.isAtSameMomentAs(today)) {
-      return 'Hôm nay';
+      return AppStrings.today;
     } else if (dueDateOnly.isAtSameMomentAs(tomorrow)) {
-      return 'Ngày mai';
+      return AppStrings.tomorrow;
     } else {
       return '${dueDate.day}/${dueDate.month}/${dueDate.year}';
     }
@@ -49,7 +50,7 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             body: Center(
               child: Text(
-                'Không tìm thấy task.',
+                AppStrings.taskNotFound,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -59,14 +60,14 @@ class TaskDetailScreen extends StatelessWidget {
     }
 
     final isInTrash = task!.category == 'Trash';
-    final scaffoldContext = context; // Giữ lại context của Scaffold
+    final scaffoldContext = context;
 
-    // Sử dụng context.watch để tự động rebuild khi TaskCubit state thay đổi
+    // Auto-rebuild when TaskCubit state changes
     final taskCubitState = context.watch<TaskCubit>().state;
     final List<Project> allProjects = taskCubitState.allProjects;
-    final List<Tag> allTags = taskCubitState.allTags; // allTags giờ đã được cập nhật
+    final List<Tag> allTags = taskCubitState.allTags;
 
-    String projectNameDisplay = 'Không có dự án';
+    String projectNameDisplay = AppStrings.noProject;
     Color projectColorDisplay = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
     Project? currentProjectInstance;
 
@@ -76,8 +77,7 @@ class TaskDetailScreen extends StatelessWidget {
         projectNameDisplay = currentProjectInstance.name;
         projectColorDisplay = currentProjectInstance.color;
       } catch (e) {
-        // print('Lỗi TaskDetailScreen: Không tìm thấy project với ID: ${task!.projectId} cho task "${task!.title}"');
-        projectNameDisplay = 'ID Dự án: ${task!.projectId}';
+        projectNameDisplay = '${AppStrings.projectIdPrefix} ${task!.projectId}';
       }
     }
 
@@ -92,7 +92,7 @@ class TaskDetailScreen extends StatelessWidget {
           },
         ),
         title: Text(
-          task!.title ?? 'Task không có tiêu đề',
+          task!.title ?? AppStrings.untitledTask,
           style: Theme.of(context).textTheme.titleLarge,
           overflow: TextOverflow.ellipsis,
         ),
@@ -109,7 +109,7 @@ class TaskDetailScreen extends StatelessWidget {
                       builder: (alertContext, setStateDialog) { // Đổi tên setState
                         return AlertDialog(
                           title: Text(
-                            isInTrash ? 'Xóa vĩnh viễn' : 'Xóa Task',
+                            isInTrash ? AppStrings.deletePermanently : AppStrings.deleteTask,
                             style: Theme.of(alertContext).textTheme.titleLarge,
                           ),
                           content: Column(
@@ -117,8 +117,8 @@ class TaskDetailScreen extends StatelessWidget {
                             children: [
                               Text(
                                 isInTrash
-                                    ? 'Bạn có chắc muốn xóa vĩnh viễn task "${task!.title}" không?'
-                                    : 'Task "${task!.title}" sẽ được chuyển vào Thùng rác. Bạn có muốn tiếp tục?',
+                                    ? '${AppStrings.confirmPermanentDeleteTask} "${task!.title}"?'
+                                    : '${AppStrings.task} "${task!.title}" ${AppStrings.confirmMoveToTrash}',
                                 style: Theme.of(alertContext).textTheme.bodyMedium,
                               ),
                               if (isLoading) ...[
@@ -130,7 +130,7 @@ class TaskDetailScreen extends StatelessWidget {
                           actions: [
                             TextButton(
                               onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
-                              child: Text('Hủy', style: Theme.of(alertContext).textTheme.bodyMedium),
+                              child: Text(AppStrings.cancel, style: Theme.of(alertContext).textTheme.bodyMedium),
                             ),
                             TextButton(
                               onPressed: isLoading
@@ -153,7 +153,7 @@ class TaskDetailScreen extends StatelessWidget {
                                   Navigator.pop(scaffoldContext, true);
                                   ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                                     SnackBar(
-                                      content: Text(isInTrash ? 'Task đã được xóa vĩnh viễn!' : 'Task đã được chuyển vào Thùng rác!'),
+                                      content: Text(isInTrash ? AppStrings.taskDeletedPermanently : AppStrings.taskMovedToTrash),
                                       backgroundColor: isInTrash
                                           ? Theme.of(scaffoldContext).colorScheme.error
                                           : Theme.of(scaffoldContext).extension<SuccessColor>()?.success ?? Colors.green,
@@ -163,16 +163,16 @@ class TaskDetailScreen extends StatelessWidget {
                                   setStateDialog(() => isLoading = false); // Sử dụng setStateDialog
                                   if (!scaffoldContext.mounted) return;
                                   ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: Theme.of(scaffoldContext).colorScheme.error),
+                                    SnackBar(content: Text('${AppStrings.errorPrefix} $e'), backgroundColor: Theme.of(scaffoldContext).colorScheme.error),
                                   );
                                 }
                               },
                               child: Text(
-                                isInTrash ? 'Xóa vĩnh viễn' : 'Xóa',
+                                isInTrash ? AppStrings.deletePermanently : AppStrings.delete,
                                 style: Theme.of(alertContext).textTheme.bodyMedium?.copyWith(color: Theme.of(alertContext).colorScheme.error),
                               ),
                             ),
-                            if (isInTrash) // Nút khôi phục
+                            if (isInTrash)
                               TextButton(
                                 onPressed: isLoading ? null : () async {
                                   setStateDialog(() => isLoading = true);
@@ -185,7 +185,7 @@ class TaskDetailScreen extends StatelessWidget {
                                     Navigator.pop(scaffoldContext, true);
                                     ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                                       SnackBar(
-                                        content: const Text('Task đã được khôi phục!'),
+                                        content: Text(AppStrings.taskRestored),
                                         backgroundColor: Theme.of(scaffoldContext).extension<SuccessColor>()?.success ?? Colors.green,
                                       ),
                                     );
@@ -193,12 +193,12 @@ class TaskDetailScreen extends StatelessWidget {
                                     setStateDialog(() => isLoading = false);
                                     if(!scaffoldContext.mounted) return;
                                     ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                                      SnackBar(content: Text('Lỗi khi khôi phục: $e'), backgroundColor: Theme.of(scaffoldContext).colorScheme.error),
+                                      SnackBar(content: Text('${AppStrings.errorRestoringTask} $e'), backgroundColor: Theme.of(scaffoldContext).colorScheme.error),
                                     );
                                   }
                                 },
                                 child: Text(
-                                  'Khôi phục',
+                                  AppStrings.restore,
                                   style: Theme.of(dialogContext).textTheme.labelLarge?.copyWith(
                                     color: Theme.of(dialogContext).extension<SuccessColor>()?.success ?? Colors.green,
                                   ),
@@ -213,7 +213,7 @@ class TaskDetailScreen extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'Delete', child: Text(isInTrash ? 'Thao tác khác...' : 'Xóa')),
+              PopupMenuItem(value: 'Delete', child: Text(isInTrash ? AppStrings.otherActionsMenu : AppStrings.delete)),
             ],
           ),
         ],
@@ -225,36 +225,36 @@ class TaskDetailScreen extends StatelessWidget {
             _buildTaskDetailItem(
               context: context,
               icon: task!.isCompleted == true ? Icons.check_circle : Icons.radio_button_unchecked,
-              title: 'Trạng thái',
-              value: task!.isCompleted == true ? 'Đã hoàn thành' : 'Chưa hoàn thành',
+              title: AppStrings.status,
+              value: task!.isCompleted == true ? AppStrings.completedStatus : AppStrings.notCompleted,
               valueColor: task!.isCompleted == true ? Theme.of(context).extension<SuccessColor>()?.success : null,
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             _buildTaskDetailItem(
               context: context,
               icon: Icons.timer_outlined,
-              title: 'Pomodoro',
+              title: AppStrings.pomodoro,
               value: '${task!.completedPomodoros ?? 0}/${task!.estimatedPomodoros ?? 0}',
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             _buildTaskDetailItem(
               context: context,
               icon: Icons.calendar_today_outlined,
-              title: 'Ngày đến hạn',
+              title: AppStrings.dueDate,
               value: _formatDueDate(task!.dueDate),
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             _buildTaskDetailItem(
               context: context,
               icon: Icons.flag_outlined,
-              title: 'Độ ưu tiên',
-              value: task!.priority ?? 'Không đặt',
+              title: AppStrings.priority,
+              value: task!.priority ?? AppStrings.notSet,
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             _buildTaskDetailItem(
               context: context,
               icon: currentProjectInstance?.icon ?? Icons.bookmark_border,
-              title: 'Dự án',
+              title: AppStrings.project,
               value: projectNameDisplay,
               valueColor: projectColorDisplay,
               backgroundColor: Theme.of(context).cardTheme.color,
@@ -262,21 +262,21 @@ class TaskDetailScreen extends StatelessWidget {
             _buildTaskDetailItem(
               context: context,
               icon: Icons.alarm_outlined,
-              title: 'Nhắc nhở',
-              value: 'Chưa đặt',
+              title: AppStrings.reminder,
+              value: AppStrings.notSet,
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             _buildTaskDetailItem(
               context: context,
               icon: Icons.repeat_outlined,
-              title: 'Lặp lại',
-              value: 'Không',
+              title: AppStrings.repeat,
+              value: AppStrings.none,
               backgroundColor: Theme.of(context).cardTheme.color,
             ),
             const SizedBox(height: 16),
 
             if (task!.subtasks != null && task!.subtasks!.isNotEmpty) ...[
-              Text('Subtasks', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
+              Text(AppStrings.subtasks, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
               const SizedBox(height: 8),
               ...task!.subtasks!.map((subtask) => ListTile(
                 leading: Checkbox(
@@ -302,7 +302,7 @@ class TaskDetailScreen extends StatelessWidget {
     activeColor: Theme.of(context).extension<SuccessColor>()?.success,
     ),
     title: Text(
-                  subtask['title'] ?? 'Subtask không có tiêu đề',
+                  subtask['title'] ?? AppStrings.untitledSubtask,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     decoration: (subtask['completed'] ?? false) ? TextDecoration.lineThrough : TextDecoration.none,
                     color: (subtask['completed'] ?? false)
@@ -316,26 +316,26 @@ class TaskDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: TextButton.icon(
                 icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
-                label: Text('Thêm subtask', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                label: Text(AppStrings.addSubtask, style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                 onPressed: () async {
                   final TextEditingController controller = TextEditingController();
                   final newTitle = await showDialog<String>(
                     context: context,
                     builder: (dialogContext) {
                       return AlertDialog(
-                        title: const Text('Thêm subtask'),
+                        title: Text(AppStrings.addSubtask),
                         content: TextField(
                           controller: controller,
-                          decoration: const InputDecoration(hintText: 'Tên subtask'),
+                          decoration: InputDecoration(hintText: AppStrings.subtaskName),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Hủy'),
+                            child: Text(AppStrings.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
-                            child: const Text('Thêm'),
+                            child: Text(AppStrings.add),
                           ),
                         ],
                       );
@@ -354,31 +354,28 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // --- SỬA HIỂN THỊ TAGS ---
             if (task!.tagIds != null && task!.tagIds!.isNotEmpty) ...[
-              Text('Thẻ', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
+              Text(AppStrings.tags, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
               const SizedBox(height: 8),
               Wrap(
-                spacing: 8, // Khoảng cách giữa các thẻ
-                runSpacing: 4, // Khoảng cách giữa các dòng thẻ nếu wrap
+                spacing: 8,
+                runSpacing: 4,
                 children: task!.tagIds!.map((tagId) {
                   Tag? currentTag;
                   try {
                     currentTag = allTags.firstWhere((t) => t.id == tagId);
                   } catch (e) {
-                    // Lỗi không tìm thấy tag, bỏ qua hiển thị tag này
+                    // Tag not found, skip displaying this tag
                   }
                   if (currentTag == null) return const SizedBox.shrink();
 
-                  // Hiển thị Text thay vì Chip
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0), // Thêm padding nhẹ cho mỗi Text
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                     child: Text(
                       '#${currentTag.name}',
                       style: TextStyle(
-                        fontSize: 16, // Kích thước chữ cho tag
-                        color: currentTag.textColor, // Màu chữ của tag
-                        // fontWeight: FontWeight.w500, // Có thể thêm độ đậm nếu muốn
+                        fontSize: 16,
+                        color: currentTag.textColor,
                       ),
                     ),
                   );
@@ -386,10 +383,9 @@ class TaskDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
             ],
-            // --- Hết phần Tags ---
 
             if (task!.note != null && task!.note!.isNotEmpty) ...[
-              Text('Ghi chú', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
+              Text(AppStrings.notes, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -402,12 +398,12 @@ class TaskDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
             ],
-            Text('Tệp đính kèm', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
+            Text(AppStrings.attachments, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18)),
             const SizedBox(height: 8),
             ListTile(
               leading: Icon(Icons.attach_file, color: Theme.of(context).iconTheme.color?.withOpacity(0.6)),
               title: Text(
-                'Chưa có tệp đính kèm',
+                AppStrings.noAttachments,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
               ),
             ),
@@ -417,10 +413,10 @@ class TaskDetailScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Điều hướng đến màn hình edit task
+          // TODO: Navigate to edit task screen
           print('Edit button tapped for task: ${task!.title}');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Chức năng chỉnh sửa task chưa được triển khai.')),
+            SnackBar(content: Text(AppStrings.editFunctionalityNotImplemented)),
           );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,

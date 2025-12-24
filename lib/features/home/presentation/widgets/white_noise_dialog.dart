@@ -91,7 +91,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: null,
                     title: 'None',
-                    subtitle: 'Tắt white noise',
+                    subtitle: 'Turn off white noise',
                     icon: Icons.close,
                     isDark: isDark,
                   ),
@@ -103,7 +103,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'gentle-rain',
                     title: 'Gentle Rain',
-                    subtitle: 'Tiếng mưa nhẹ nhàng',
+                    subtitle: 'Soft rain sounds',
                     icon: Icons.water_drop,
                     isDark: isDark,
                   ),
@@ -115,7 +115,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'water-stream',
                     title: 'Water Stream',
-                    subtitle: 'Tiếng dòng nước chảy',
+                    subtitle: 'Flowing water sounds',
                     icon: Icons.waves,
                     isDark: isDark,
                   ),
@@ -127,7 +127,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'small-stream',
                     title: 'Small Stream',
-                    subtitle: 'Tiếng suối nhỏ róc rách',
+                    subtitle: 'Babbling brook sounds',
                     icon: Icons.stream,
                     isDark: isDark,
                   ),
@@ -139,7 +139,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'bonfire',
                     title: 'Bonfire',
-                    subtitle: 'Tiếng lửa bập bùng',
+                    subtitle: 'Crackling fire sounds',
                     icon: Icons.local_fire_department,
                     isDark: isDark,
                   ),
@@ -151,7 +151,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'cafe',
                     title: 'Café Ambiance',
-                    subtitle: 'Không khí quán cà phê',
+                    subtitle: 'Coffee shop atmosphere',
                     icon: Icons.coffee,
                     isDark: isDark,
                   ),
@@ -163,7 +163,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'clock_ticking',
                     title: 'Clock Ticking',
-                    subtitle: 'Tiếng đồng hồ tích tắc',
+                    subtitle: 'Steady clock sounds',
                     icon: Icons.schedule,
                     isDark: isDark,
                   ),
@@ -175,7 +175,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'library',
                     title: 'Library',
-                    subtitle: 'Tiếng thư viện yên tĩnh',
+                    subtitle: 'Quiet library ambience',
                     icon: Icons.menu_book,
                     isDark: isDark,
                   ),
@@ -187,7 +187,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                     context: context,
                     value: 'metronome',
                     title: 'Metronome',
-                    subtitle: 'Nhịp metronome đều đặn',
+                    subtitle: 'Steady metronome beats',
                     icon: Icons.music_note,
                     isDark: isDark,
                   ),
@@ -215,7 +215,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                       ),
                     ),
                     child: Text(
-                      'Hủy',
+                      'Cancel',
                       style: FigmaTextStyles.labelMedium.copyWith(
                         color: FigmaColors.textSecondary,
                       ),
@@ -238,7 +238,7 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
                       ),
                     ),
                     child: Text(
-                      'Lưu',
+                      'Save',
                       style: FigmaTextStyles.labelMedium.copyWith(
                         color: FigmaColors.white,
                       ),
@@ -369,8 +369,8 @@ class _WhiteNoiseDialogState extends State<WhiteNoiseDialog> {
       SnackBar(
         content: Text(
           selectedWhiteNoise == null
-              ? 'White Noise đã được tắt'
-              : 'White Noise đã được bật',
+              ? 'White Noise disabled'
+              : 'White Noise enabled',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,

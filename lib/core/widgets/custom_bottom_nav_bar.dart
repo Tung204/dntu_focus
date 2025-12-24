@@ -13,9 +13,9 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Xác định fontSize dựa trên kích thước màn hình hoặc một giá trị cố định nhỏ hơn
-    // double labelFontSize = MediaQuery.of(context).size.width < 360 ? 10.0 : 12.0; // Ví dụ
-    double labelFontSize = 11.0; // Hoặc thử một giá trị cố định nhỏ hơn
+    // Determine fontSize based on screen size or a fixed smaller value
+    // double labelFontSize = MediaQuery.of(context).size.width < 360 ? 10.0 : 12.0; // Example
+    double labelFontSize = 11.0; // Or try a fixed smaller value
 
     return BottomNavigationBar(
       currentIndex: currentIndex,
@@ -23,7 +23,7 @@ class CustomBottomNavBar extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Theme.of(context).colorScheme.secondary,
       unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-      selectedLabelStyle: TextStyle(fontSize: labelFontSize, fontWeight: FontWeight.w600), // FontWeight cho mục được chọn
+      selectedLabelStyle: TextStyle(fontSize: labelFontSize, fontWeight: FontWeight.w600), // FontWeight for selected item
       unselectedLabelStyle: TextStyle(fontSize: labelFontSize),
       items: const [
         BottomNavigationBarItem(
