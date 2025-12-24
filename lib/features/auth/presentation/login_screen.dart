@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildPasswordField(isLoading),
                     const SizedBox(height: 8),
                     _buildForgotPasswordButton(context, isLoading),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     if (isLoading)
                       const Center(child: CircularProgressIndicator())
                     else
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: FigmaSpacing.logoSize,
           width: FigmaSpacing.logoSize,
         ),
-        SizedBox(height: FigmaSpacing.lg),
+        SizedBox(height: FigmaSpacing.sm),
         Text(
           'Moji Focus',
           style: FigmaTextStyles.h2,
