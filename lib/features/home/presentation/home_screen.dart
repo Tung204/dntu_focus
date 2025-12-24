@@ -610,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildSettingIcon(
-          icon: Icons.block,
+          icon: Icons.shield_outlined,
           label: 'Strict Mode',
           iconSize: iconSize,
           labelSize: labelSize,
@@ -618,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           onTap: () => _showStrictModeDialog(context),
         ),
         _buildSettingIcon(
-          icon: Icons.hourglass_bottom,
+          icon: Icons.timer_outlined,
           label: 'Timer Mode',
           iconSize: iconSize,
           labelSize: labelSize,
@@ -626,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           onTap: () => _showTimerModeDialog(context, state),
         ),
         _buildSettingIcon(
-          icon: Icons.music_note,
+          icon: Icons.headset_outlined,
           label: 'White Noise',
           iconSize: iconSize,
           labelSize: labelSize,

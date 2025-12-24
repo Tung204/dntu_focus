@@ -18,6 +18,11 @@ class DueDatePicker extends StatefulWidget {
 class _DueDatePickerState extends State<DueDatePicker> {
   late DateTime _selectedDate;
   final DateTime _now = DateTime.now();
+  String? _selectedQuickOption;
+
+  // Màu coral chính theo design
+  static const Color _coralColor = Color(0xFFFF7B6B);
+  static const Color _coralLightColor = Color(0xFFFFF0ED);
 
   @override
   void initState() {
@@ -25,226 +30,321 @@ class _DueDatePickerState extends State<DueDatePicker> {
     _selectedDate = widget.initialDate ?? _now;
   }
 
-  void _updateSelectedDateAndClose(DateTime? date, String? quickOptionName) {
+  void _selectQuickOption(DateTime? date, String optionName) {
     setState(() {
+      _selectedQuickOption = optionName;
       if (date != null) {
         _selectedDate = date;
       }
-      // Giữ nguyên _selectedDate nếu date là null (cho "Planned")
-      // để khi người dùng nhấn OK, giá trị _selectedDate hiện tại (có thể là từ lịch) được chọn.
-      // Nếu bạn muốn "Planned" thực sự nghĩa là "không có ngày",
-      // thì widget.onDateSelected(null) đã đúng,
-      // và _selectedDate có thể giữ nguyên hoặc reset về _now tùy ý.
     });
-    widget.onDateSelected(date); // Truyền date (có thể null cho "Planned")
-    if (mounted) {
-      Navigator.pop(context); // Đóng bottom sheet sau khi chọn nút nhanh
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
     final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
 
-    final double quickOptionHorizontalPadding = screenWidth < 360 ? 4.0 : 8.0;
-    final double quickOptionIconSize = screenWidth < 360 ? 26.0 : 30.0;
-    final double circularOptionContainerHeight = screenWidth < 360 ? 60 : 65;
-    final double quickOptionMinWidth = screenWidth / 4.9; // Điều chỉnh nhẹ nếu cần thêm không gian
+    // Responsive sizing
+    final double iconContainerSize = screenWidth < 360 ? 36.0 : 40.0;
+    final double iconSize = screenWidth < 360 ? 16.0 : 18.0;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: SingleChildScrollView(
+    return SafeArea(
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? theme.scaffoldBackgroundColor : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
-            const Text(
-              'Due Date',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.spaceAround,
-              spacing: quickOptionHorizontalPadding,
-              runSpacing: 8.0,
-              children: [
-                _buildCircularDateOption(theme, 'Today', Colors.green, Icons.wb_sunny_outlined, _now, circularOptionContainerHeight, quickOptionIconSize, quickOptionMinWidth),
-                _buildCircularDateOption(theme, 'Tomorrow', Colors.blue, Icons.wb_cloudy_outlined, _now.add(const Duration(days: 1)), circularOptionContainerHeight, quickOptionIconSize, quickOptionMinWidth),
-                _buildCircularDateOption(theme, 'This Week', Colors.purple, Icons.calendar_view_week_outlined, _now.add(Duration(days: DateTime.daysPerWeek - _now.weekday)), circularOptionContainerHeight, quickOptionIconSize, quickOptionMinWidth), // Cuối tuần này (Chủ nhật)
-                _buildCircularDateOption(theme, 'Planned', Colors.red, Icons.check_circle_outline, null, circularOptionContainerHeight, quickOptionIconSize, quickOptionMinWidth),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: (screenHeight * 0.43).clamp(270.0, 340.0), // Giảm nhẹ maxHeight và minHeight
+            // Drag Handle
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(top: 6, bottom: 3),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
+            ),
+
+            // Title
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                'Due Date',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+
+            // Divider
+            Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+
+            // Quick Options
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildQuickOption(
+                    icon: Icons.wb_sunny_outlined,
+                    label: 'Today',
+                    color: const Color(0xFF4CAF50),
+                    isSelected: _selectedQuickOption == 'Today',
+                    onTap: () => _selectQuickOption(_now, 'Today'),
+                    iconContainerSize: iconContainerSize,
+                    iconSize: iconSize,
+                  ),
+                  _buildQuickOption(
+                    icon: Icons.cloud_outlined,
+                    label: 'Tomorrow',
+                    color: const Color(0xFF2196F3),
+                    isSelected: _selectedQuickOption == 'Tomorrow',
+                    onTap:
+                        () => _selectQuickOption(
+                          _now.add(const Duration(days: 1)),
+                          'Tomorrow',
+                        ),
+                    iconContainerSize: iconContainerSize,
+                    iconSize: iconSize,
+                  ),
+                  _buildQuickOption(
+                    icon: Icons.calendar_view_week_outlined,
+                    label: 'This Week',
+                    color: const Color(0xFF9C27B0),
+                    isSelected: _selectedQuickOption == 'This Week',
+                    onTap:
+                        () => _selectQuickOption(
+                          _now.add(
+                            Duration(days: DateTime.daysPerWeek - _now.weekday),
+                          ),
+                          'This Week',
+                        ),
+                    iconContainerSize: iconContainerSize,
+                    iconSize: iconSize,
+                  ),
+                  _buildQuickOption(
+                    icon: Icons.event_outlined,
+                    label: 'Planned',
+                    color: _coralColor,
+                    isSelected: _selectedQuickOption == 'Planned',
+                    onTap: () => _selectQuickOption(null, 'Planned'),
+                    iconContainerSize: iconContainerSize,
+                    iconSize: iconSize,
+                  ),
+                ],
+              ),
+            ),
+
+            // Divider
+            Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+
+            // Calendar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: TableCalendar(
-                firstDay: _now.subtract(const Duration(days: 30)),
+                firstDay: DateTime(_now.year - 1, 1, 1),
                 lastDay: _now.add(const Duration(days: 365 * 2)),
                 focusedDay: _selectedDate,
                 selectedDayPredicate: (day) => isSameDay(_selectedDate, day),
+                startingDayOfWeek: StartingDayOfWeek.monday,
                 onDaySelected: (selectedDay, focusedDay) {
                   setState(() {
                     _selectedDate = selectedDay;
+                    _selectedQuickOption = null;
                   });
-                  // Không gọi widget.onDateSelected ở đây, nút OK sẽ xử lý
                 },
-                headerStyle: const HeaderStyle(
+                headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
-                  titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black, size: 20),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black, size: 20),
-                ),
-                calendarStyle: CalendarStyle(
-                  selectedDecoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.8), // Dùng màu primary từ theme
-                    shape: BoxShape.circle,
+                  titleTextStyle: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
-                  selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary), // Chữ trên nền primary
-                  todayDecoration: BoxDecoration(
-                    color: theme.colorScheme.secondary.withOpacity(0.7), // Dùng màu secondary cho today
-                    shape: BoxShape.circle,
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    size: 16,
                   ),
-                  todayTextStyle: TextStyle(color: theme.colorScheme.onSecondary),
-                  outsideDaysVisible: false,
-                  disabledTextStyle: TextStyle(color: Colors.grey.shade400), // Làm mờ hơn chút
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    size: 16,
+                  ),
+                  headerPadding: EdgeInsets.zero,
+                  headerMargin: EdgeInsets.zero,
                 ),
                 daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  weekendStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  weekdayStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  ),
+                  weekendStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  ),
+                ),
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: const BoxDecoration(
+                    color: _coralColor,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: _coralColor.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: TextStyle(
+                    color: isDark ? Colors.white : _coralColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                  defaultTextStyle: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 12,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 12,
+                  ),
+                  outsideDaysVisible: false,
+                  outsideTextStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                  disabledTextStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+                  ),
+                  cellMargin: EdgeInsets.zero,
                 ),
                 daysOfWeekHeight: 20,
-                rowHeight: 36, // Giảm nhẹ rowHeight
+                rowHeight: 32,
                 calendarFormat: CalendarFormat.month,
+                availableGestures: AvailableGestures.horizontalSwipe,
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        backgroundColor: theme.dividerColor.withOpacity(0.1), // Màu nền nhẹ từ theme
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+
+            // Bottom Buttons
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 16 + bottomPadding),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Cancel Button
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.black),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        widget.onDateSelected(_selectedDate); // Gửi ngày cuối cùng được chọn từ state
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary, // Dùng màu primary
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  // OK Button
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_selectedQuickOption == 'Planned') {
+                            widget.onDateSelected(null);
+                          } else {
+                            widget.onDateSelected(_selectedDate);
+                          }
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: const Text('OK'),
                       ),
-                      child: const Text('OK'),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCircularDateOption(
-      ThemeData theme,
-      String label,
-      Color baseColor, // Màu cơ bản của nút (dùng khi không được chọn)
-      IconData icon,
-      DateTime? date,
-      double containerHeight,
-      double iconSize,
-      double minWidth,
-      ) {
-    bool isSelected = false;
-    // Chỉ đánh dấu selected nếu date không null và trùng với _selectedDate
-    // Nút "Planned" (date == null) sẽ không có trạng thái isSelected trực quan trên nút này
-    if (date != null && isSameDay(_selectedDate, date)) {
-      isSelected = true;
-    }
-
-    Color currentButtonColor = isSelected ? baseColor : baseColor.withOpacity(0.65);
-    Color? currentBorderColor;
-    double currentBorderWidth = 0;
-    List<BoxShadow>? currentBoxShadow;
-
-    if (isSelected) {
-      // Đặt màu viền khi được chọn
-      currentBorderColor = theme.brightness == Brightness.light
-          ? theme.colorScheme.primary // Màu viền cho light theme
-          : theme.colorScheme.onSurface.withOpacity(0.9); // Màu viền cho dark theme
-      currentBorderWidth = 2.5;
-      currentBoxShadow = [
-        BoxShadow(
-            color: baseColor.withOpacity(0.5),
-            blurRadius: 5,
-            spreadRadius: 1)
-      ];
-    }
-
+  Widget _buildQuickOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required double iconContainerSize,
+    required double iconSize,
+  }) {
     return GestureDetector(
-      onTap: () {
-        _updateSelectedDateAndClose(date, label);
-      },
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: containerHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 8), // Giữ padding để icon không quá sát viền
-            constraints: BoxConstraints(minWidth: minWidth),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: iconContainerSize,
+            height: iconContainerSize,
             decoration: BoxDecoration(
+              color: color,
               shape: BoxShape.circle,
-              color: currentButtonColor,
-              border: currentBorderColor != null
-                  ? Border.all(color: currentBorderColor, width: currentBorderWidth)
-                  : null,
-              boxShadow: currentBoxShadow,
+              border:
+                  isSelected ? Border.all(color: Colors.white, width: 2) : null,
+              boxShadow:
+                  isSelected
+                      ? [
+                        BoxShadow(
+                          color: color.withOpacity(0.4),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                      : null,
             ),
-            child: Icon(
-              icon,
-              color: Colors.white, // Giữ màu icon là trắng cho dễ nhìn trên nền màu
-              size: iconSize,
-            ),
+            child: Icon(icon, color: Colors.white, size: iconSize),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 3),
           Text(
             label,
             style: TextStyle(
-              color: theme.textTheme.bodyMedium?.color,
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, // Làm đậm chữ khi chọn
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              color: isSelected ? color : Colors.grey.shade600,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

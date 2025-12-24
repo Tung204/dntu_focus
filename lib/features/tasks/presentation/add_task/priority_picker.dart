@@ -56,31 +56,47 @@ class _PriorityPickerState extends State<PriorityPicker> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                SizedBox(
-                  width: 80,
-                  height: 36,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
-                    child: const Text('OK'),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('OK'),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
           ],
         ),
       ),
