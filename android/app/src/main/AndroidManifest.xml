@@ -99,6 +99,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- Disable Firebase auto-initialization -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="com.example.moji_todo.firebaseinitprovider"
+            android:enabled="false"
+            android:exported="false"
+            tools:replace="android:authorities" />
     </application>
 
     <!-- Queries for Process Text -->
