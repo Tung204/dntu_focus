@@ -63,28 +63,48 @@ class AppData extends InheritedWidget {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  print('[INIT] Starting app initialization...');
+  
+  // Kiểm tra Firebase đã được khởi tạo chưa
+  if (Firebase.apps.isEmpty) {
+    print('[INIT] Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('[INIT] Firebase initialized');
+  }
+  
+  print('[INIT] Loading .env file...');
   await dotenv.load(fileName: ".env");
+  print('[INIT] .env loaded');
 
+  print('[INIT] Initializing Hive...');
   await Hive.initFlutter();
   Hive.registerAdapter(TaskAdapter());
   Hive.registerAdapter(ProjectAdapter());
   Hive.registerAdapter(TagAdapter());
+  print('[INIT] Hive adapters registered');
 
+  print('[INIT] Opening Hive boxes...');
   final taskBox = await Hive.openBox<Task>('tasks');
   final syncInfoBox = await Hive.openBox<DateTime>('sync_info');
   final projectBox = await Hive.openBox<Project>('projects');
   final tagBox = await Hive.openBox<Tag>('tags');
   final appStatusBox = await Hive.openBox<dynamic>('app_status');
+  print('[INIT] Hive boxes opened');
 
+  print('[INIT] Initializing notification service...');
   final notificationService = UnifiedNotificationService();
   await notificationService.init();
+  print('[INIT] Notification service initialized');
 
+  print('[INIT] Creating Firebase service...');
+  print('[INIT] Creating Firebase service...');
   final firebaseService = FirebaseService();
   final authRepository = AuthRepository(firebaseService);
+  print('[INIT] Services created');
 
+  print('[INIT] Running app...');
   runApp(MyApp(
     taskBox: taskBox,
     syncInfoBox: syncInfoBox,
