@@ -128,32 +128,40 @@ class FigmaService {
     }
   }
 
-  String _handleError(DioException error) {
+  Exception _handleError(DioException error) {
+    String message;
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
-        return 'Connection timeout. Vui lòng kiểm tra kết nối mạng.';
+        message = 'Connection timeout. Vui lòng kiểm tra kết nối mạng.';
+        break;
       
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
         switch (statusCode) {
           case 403:
-            return 'Access denied. Kiểm tra Figma access token hoặc file permissions.';
+            message = 'Access denied. Kiểm tra Figma access token hoặc file permissions.';
+            break;
           case 404:
-            return 'File not found. Kiểm tra lại File ID.';
+            message = 'File not found. Kiểm tra lại File ID.';
+            break;
           case 429:
-            return 'Rate limit exceeded. Vui lòng thử lại sau.';
+            message = 'Rate limit exceeded. Vui lòng thử lại sau.';
+            break;
           default:
-            return 'Server error: ${error.response?.data}';
+            message = 'Server error: ${error.response?.data}';
         }
+        break;
       
       case DioExceptionType.cancel:
-        return 'Request cancelled.';
+        message = 'Request cancelled.';
+        break;
       
       default:
-        return 'Network error: ${error.message}';
+        message = 'Network error: ${error.message}';
     }
+    return Exception(message);
   }
 
   /// Test connection với Figma API
